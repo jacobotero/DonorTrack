@@ -217,7 +217,7 @@ router.post(
         return;
       }
 
-      const [org, allDonors] = await Promise.all([
+      const [orgData, allDonors] = await Promise.all([
         prisma.organization.findUnique({
           where: { id: orgId },
         }),
@@ -244,7 +244,7 @@ router.post(
         }),
       ]);
 
-      if (!org) {
+      if (!orgData) {
         res.status(404).json({ error: "Organization not found" });
         return;
       }

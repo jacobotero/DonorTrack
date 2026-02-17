@@ -220,6 +220,14 @@ export default function TaxLetters() {
     }
   };
 
+  if (loading || !organization) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -232,7 +240,7 @@ export default function TaxLetters() {
           Generate Tax Letters
         </h2>
 
-        {organization?.subscriptionTier === "STARTER" ? (
+        {organization.subscriptionTier === "STARTER" ? (
           <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
