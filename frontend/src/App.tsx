@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./hooks/useAuth";
 import AppLayout from "./components/layout/AppLayout";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -21,16 +22,17 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/donors" element={<Donors />} />
-              <Route path="/donors/:id" element={<DonorDetail />} />
-              <Route path="/donations" element={<Donations />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/tax-letters" element={<TaxLetters />} />
-              <Route path="/settings" element={<Settings />} />
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="donors" element={<Donors />} />
+              <Route path="donors/:id" element={<DonorDetail />} />
+              <Route path="donations" element={<Donations />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="tax-letters" element={<TaxLetters />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
           <Toaster position="top-right" />

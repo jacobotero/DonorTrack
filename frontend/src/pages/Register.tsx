@@ -10,7 +10,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/app" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

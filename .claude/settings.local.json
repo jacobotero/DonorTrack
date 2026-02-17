@@ -8,7 +8,9 @@
       "Bash(npx prisma generate:*)",
       "Bash(curl:*)",
       "Bash(npm audit:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ],
     "mode": "unrestricted"
   }

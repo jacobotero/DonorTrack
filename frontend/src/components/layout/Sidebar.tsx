@@ -14,12 +14,12 @@ import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/donors", icon: Users, label: "Donors" },
-  { to: "/donations", icon: DollarSign, label: "Donations" },
-  { to: "/reports", icon: BarChart3, label: "Reports" },
-  { to: "/tax-letters", icon: FileText, label: "Tax Letters" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/app", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/app/donors", icon: Users, label: "Donors" },
+  { to: "/app/donations", icon: DollarSign, label: "Donations" },
+  { to: "/app/reports", icon: BarChart3, label: "Reports" },
+  { to: "/app/tax-letters", icon: FileText, label: "Tax Letters" },
+  { to: "/app/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function Sidebar() {
@@ -44,7 +44,7 @@ export default function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/"}
+            end={item.to === "/app"}
             onClick={closeMobileMenu}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
