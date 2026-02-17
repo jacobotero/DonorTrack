@@ -7,10 +7,11 @@ import {
   CheckCircle,
   AlertCircle,
   Undo2,
+  Lock,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../lib/api";
-import type { TaxLetter, Donor } from "../types";
+import type { TaxLetter, Donor, Organization } from "../types";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -30,6 +31,7 @@ function formatDate(dateString: string) {
 export default function TaxLetters() {
   const [letters, setLetters] = useState<TaxLetter[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
@@ -46,9 +48,19 @@ export default function TaxLetters() {
   });
 
   useEffect(() => {
+    fetchOrganization();
     fetchLetters();
     fetchDonors();
   }, [filterYear]);
+
+  const fetchOrganization = () => {
+    api
+      .get("/organization")
+      .then((res) => {
+        setOrganization(res.data.organization);
+      })
+      .catch(console.error);
+  };
 
   const fetchLetters = () => {
     setLoading(true);
@@ -220,89 +232,129 @@ export default function TaxLetters() {
           Generate Tax Letters
         </h2>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tax Year
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {yearOptions.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+        {organization?.subscriptionTier === "STARTER" ? (
+          <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <Lock className="w-6 h-6 text-emerald-700" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Unlock Tax Letter Generation
+                </h3>
+                <p className="text-gray-700 mb-4">
+                  Tax letter generation is available on the <strong>Growth</strong> and{" "}
+                  <strong>Plus</strong> plans. Upgrade your subscription to generate
+                  IRS-compliant tax letters for your donors automatically.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="/#pricing"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    View Plans & Upgrade
+                  </a>
+                  <a
+                    href="/app/settings"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    View Current Plan
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-emerald-200">
+              <p className="text-sm text-gray-600">
+                <strong>Growth Plan ($59/mo)</strong> includes tax letters, 500 donors,
+                and priority support.
+              </p>
+            </div>
           </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Select Donors (optional - leave empty for all donors)
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tax Year
               </label>
-              <button
-                onClick={handleSelectAll}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                {selectedDonors.length === donors.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </button>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
-              {donors.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No donors found
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {donors.map((donor) => (
-                    <label
-                      key={donor.id}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedDonors.includes(donor.id)}
-                        onChange={() => handleDonorToggle(donor.id)}
-                        className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
-                      />
-                      <span className="text-sm text-gray-900">
-                        {donor.firstName} {donor.lastName}
-                        {donor.email && (
-                          <span className="text-gray-500 ml-2">
-                            ({donor.email})
-                          </span>
-                        )}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Select Donors (optional - leave empty for all donors)
+                </label>
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                >
+                  {selectedDonors.length === donors.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </button>
+              </div>
+
+              <div className="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
+                {donors.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    No donors found
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {donors.map((donor) => (
+                      <label
+                        key={donor.id}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDonors.includes(donor.id)}
+                          onChange={() => handleDonorToggle(donor.id)}
+                          className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                        />
+                        <span className="text-sm text-gray-900">
+                          {donor.firstName} {donor.lastName}
+                          {donor.email && (
+                            <span className="text-gray-500 ml-2">
+                              ({donor.email})
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {selectedDonors.length > 0 && (
+                <p className="text-sm text-gray-600 mt-2">
+                  {selectedDonors.length} donor(s) selected
+                </p>
               )}
             </div>
 
-            {selectedDonors.length > 0 && (
-              <p className="text-sm text-gray-600 mt-2">
-                {selectedDonors.length} donor(s) selected
-              </p>
-            )}
+            <div className="flex gap-3">
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileText className="w-4 h-4" />
+                {generating ? "Generating..." : "Generate Tax Letters"}
+              </button>
+            </div>
           </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FileText className="w-4 h-4" />
-              {generating ? "Generating..." : "Generate Tax Letters"}
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Filter and Batch Actions */}

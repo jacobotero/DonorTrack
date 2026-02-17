@@ -9,6 +9,7 @@ import {
   LogOut,
   X,
   Menu,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
@@ -40,24 +41,33 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/app"}
-            onClick={closeMobileMenu}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`
-            }
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const isRestricted =
+            item.label === "Tax Letters" &&
+            user?.organization?.subscriptionTier === "STARTER";
+
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/app"}
+              onClick={closeMobileMenu}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`
+              }
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span className="flex-1">{item.label}</span>
+              {isRestricted && (
+                <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="p-4 border-t border-gray-200">

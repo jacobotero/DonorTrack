@@ -18,6 +18,7 @@ export type Organization = {
   ein?: string;
   taxExemptStatus?: string;
   logoUrl?: string;
+  subscriptionTier: "STARTER" | "GROWTH" | "PLUS";
 };
 
 export type Donor = {

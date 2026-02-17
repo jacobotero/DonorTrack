@@ -189,12 +189,27 @@ router.post(
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const orgId = await getOrgId(req.user!.userId);
-      if (!orgId) {
+      // Get organization and check subscription tier
+      const org = await prisma.organization.findFirst({
+        where: { userId: req.user!.userId },
+        select: { id: true, subscriptionTier: true },
+      });
+
+      if (!org) {
         res.status(404).json({ error: "Organization not found" });
         return;
       }
 
+      // Check if organization has access to tax letter generation
+      if (org.subscriptionTier === "STARTER") {
+        res.status(403).json({
+          error: "Tax letter generation requires Growth or Plus subscription",
+          upgradeRequired: true,
+        });
+        return;
+      }
+
+      const orgId = org.id;
       const { year, donorIds = [] } = req.body;
 
       if (!year || typeof year !== "number") {

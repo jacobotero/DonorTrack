@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum SubscriptionTier {
+  STARTER
+  GROWTH
+  PLUS
+}
+
 model User {
   id            String       @id @default(uuid()) @db.Uuid
   email         String       @unique @db.VarChar(255)
@@ -19,21 +25,22 @@ model User {
 }
 
 model Organization {
-  id              String   @id @default(uuid()) @db.Uuid
-  userId          String   @unique @map("user_id") @db.Uuid
-  name            String   @db.VarChar(255)
-  addressLine1    String?  @map("address_line1") @db.VarChar(255)
-  addressLine2    String?  @map("address_line2") @db.VarChar(255)
-  city            String?  @db.VarChar(100)
-  state           String?  @db.VarChar(50)
-  zip             String?  @db.VarChar(20)
-  phone           String?  @db.VarChar(50)
-  email           String?  @db.VarChar(255)
-  ein             String?  @db.VarChar(50)
-  taxExemptStatus String?  @map("tax_exempt_status") @db.VarChar(100)
-  logoUrl         String?  @map("logo_url")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @unique @map("user_id") @db.Uuid
+  name             String           @db.VarChar(255)
+  addressLine1     String?          @map("address_line1") @db.VarChar(255)
+  addressLine2     String?          @map("address_line2") @db.VarChar(255)
+  city             String?          @db.VarChar(100)
+  state            String?          @db.VarChar(50)
+  zip              String?          @db.VarChar(20)
+  phone            String?          @db.VarChar(50)
+  email            String?          @db.VarChar(255)
+  ein              String?          @db.VarChar(50)
+  taxExemptStatus  String?          @map("tax_exempt_status") @db.VarChar(100)
+  logoUrl          String?          @map("logo_url")
+  subscriptionTier SubscriptionTier @default(STARTER) @map("subscription_tier")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   donors     Donor[]

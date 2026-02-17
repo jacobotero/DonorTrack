@@ -233,6 +233,63 @@ export default function Settings() {
         </form>
       </div>
 
+      {/* Subscription Plan */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Subscription Plan
+        </h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl font-bold text-emerald-700">
+                {org?.subscriptionTier === "STARTER" && "Starter"}
+                {org?.subscriptionTier === "GROWTH" && "Growth"}
+                {org?.subscriptionTier === "PLUS" && "Plus"}
+              </span>
+              {org?.subscriptionTier === "STARTER" && (
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                  100 Donors
+                </span>
+              )}
+              {org?.subscriptionTier === "GROWTH" && (
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+                  500 Donors
+                </span>
+              )}
+              {org?.subscriptionTier === "PLUS" && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                  Unlimited
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-600">
+              {org?.subscriptionTier === "STARTER" &&
+                "$29/month - All core features for small nonprofits"}
+              {org?.subscriptionTier === "GROWTH" &&
+                "$59/month - Advanced features including tax letter generation"}
+              {org?.subscriptionTier === "PLUS" &&
+                "$99/month - Complete platform with unlimited donors"}
+            </p>
+          </div>
+          {org?.subscriptionTier === "STARTER" && (
+            <a
+              href="/#pricing"
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+            >
+              Upgrade Plan
+            </a>
+          )}
+        </div>
+        {org?.subscriptionTier === "STARTER" && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Upgrade to Growth or Plus</strong> to unlock tax letter
+              generation, manage more donors, and get priority support.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Fund Management */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">

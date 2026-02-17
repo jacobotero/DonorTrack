@@ -276,7 +276,7 @@ export default function Landing() {
               Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Choose the plan that fits your organization. All plans include every feature.
+              Choose the plan that fits your organization. Start small and upgrade as you grow.
             </p>
           </div>
 
@@ -304,7 +304,7 @@ export default function Landing() {
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Tax letter generation</span>
+                  <span>CSV import & batch entry</span>
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
