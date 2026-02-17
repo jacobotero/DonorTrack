@@ -317,7 +317,7 @@ export default function Dashboard() {
             </p>
           </div>
           <Link
-            to="/tax-letters"
+            to="/app/tax-letters"
             className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 whitespace-nowrap"
           >
             <FileText className="w-4 h-4" />
