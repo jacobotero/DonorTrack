@@ -13,6 +13,7 @@ import Donations from "./pages/Donations";
 import Reports from "./pages/Reports";
 import TaxLetters from "./pages/TaxLetters";
 import Settings from "./pages/Settings";
+import Upgrade from "./pages/Upgrade";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/upgrade" element={<Upgrade />} />
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="donors" element={<Donors />} />
@@ -33,6 +35,7 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="tax-letters" element={<TaxLetters />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="upgrade" element={<Upgrade />} />
             </Route>
           </Routes>
           <Toaster position="top-right" />

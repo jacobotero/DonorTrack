@@ -312,7 +312,7 @@ export default function Landing() {
                 </li>
               </ul>
               <Link
-                to="/register"
+                to="/upgrade"
                 className="block w-full text-center px-6 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
               >
                 Start Free Trial
@@ -353,7 +353,7 @@ export default function Landing() {
                 </li>
               </ul>
               <Link
-                to="/register"
+                to="/upgrade"
                 className="block w-full text-center px-6 py-3 bg-white text-emerald-600 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
               >
                 Start Free Trial
@@ -391,7 +391,7 @@ export default function Landing() {
                 </li>
               </ul>
               <Link
-                to="/register"
+                to="/upgrade"
                 className="block w-full text-center px-6 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
               >
                 Start Free Trial

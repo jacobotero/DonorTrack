@@ -257,7 +257,7 @@ export default function TaxLetters() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <a
-                    href="/#pricing"
+                    href="/app/upgrade"
                     className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
                   >
                     View Plans & Upgrade
