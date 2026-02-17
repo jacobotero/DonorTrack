@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Upload, Download } from "lucide-react";
 import api from "../lib/api";
 import type { Donation, Donor, Fund, Pagination } from "../types";
 import toast from "react-hot-toast";
@@ -36,6 +36,10 @@ export default function Donations() {
   const [showAddModal, setShowAddModal] = useState(
     searchParams.get("action") === "add"
   );
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchCount, setBatchCount] = useState(0);
 
   // Filters
   const [startDate, setStartDate] = useState("");
@@ -84,21 +88,42 @@ export default function Donations() {
     e.preventDefault();
     try {
       await api.post("/donations", form);
-      toast.success("Donation recorded");
-      setShowAddModal(false);
-      setForm({
-        donorId: "",
-        amount: "",
-        donationDate: new Date().toISOString().split("T")[0],
-        paymentMethod: "",
-        checkNumber: "",
-        fund: "",
-        campaign: "",
-        notes: "",
-      });
-      searchParams.delete("action");
-      searchParams.delete("donorId");
-      setSearchParams(searchParams);
+
+      if (batchMode) {
+        // In batch mode, keep modal open and only clear amount/check number
+        toast.success(`Donation ${batchCount + 1} recorded`);
+        setBatchCount(batchCount + 1);
+        setForm({
+          ...form,
+          amount: "",
+          checkNumber: "",
+          notes: "",
+        });
+        // Focus on amount field for quick entry
+        setTimeout(() => {
+          const amountInput = document.querySelector<HTMLInputElement>(
+            'input[name="amount"]'
+          );
+          amountInput?.focus();
+        }, 100);
+      } else {
+        // Normal mode, close modal and reset
+        toast.success("Donation recorded");
+        setShowAddModal(false);
+        setForm({
+          donorId: "",
+          amount: "",
+          donationDate: new Date().toISOString().split("T")[0],
+          paymentMethod: "",
+          checkNumber: "",
+          fund: "",
+          campaign: "",
+          notes: "",
+        });
+        searchParams.delete("action");
+        searchParams.delete("donorId");
+        setSearchParams(searchParams);
+      }
       fetchDonations();
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to record donation");
@@ -116,17 +141,93 @@ export default function Donations() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await api.get("/donations/export", {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `donations-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Donations exported successfully");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to export donations");
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/donations/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const { imported, errors, errorDetails } = response.data;
+      if (errors > 0) {
+        toast.error(
+          `Imported ${imported} donations with ${errors} errors. Check console for details.`
+        );
+        console.error("Import errors:", errorDetails);
+      } else {
+        toast.success(`Successfully imported ${imported} donations`);
+      }
+      fetchDonations();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to import donations");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Donations</h1>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-        >
-          <Plus className="w-4 h-4" />
-          Add Donation
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" />
+            {importing ? "Importing..." : "Import CSV"}
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+          >
+            <Plus className="w-4 h-4" />
+            Add Donation
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -269,20 +370,42 @@ export default function Donations() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Add Donation
-              </h2>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  searchParams.delete("action");
-                  searchParams.delete("donorId");
-                  setSearchParams(searchParams);
-                }}
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Add Donation{batchMode && ` - Batch Mode (${batchCount} entered)`}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setBatchMode(false);
+                    setBatchCount(0);
+                    searchParams.delete("action");
+                    searchParams.delete("donorId");
+                    setSearchParams(searchParams);
+                  }}
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={batchMode}
+                  onChange={(e) => {
+                    setBatchMode(e.target.checked);
+                    if (!e.target.checked) setBatchCount(0);
+                  }}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <span className="text-gray-700 font-medium">
+                  Batch entry mode
+                </span>
+                <span className="text-gray-500 text-xs">
+                  (form stays open after saving)
+                </span>
+              </label>
             </div>
             <form onSubmit={handleAddDonation} className="p-6 space-y-4">
               <div>
@@ -313,6 +436,7 @@ export default function Donations() {
                   </label>
                   <input
                     type="number"
+                    name="amount"
                     step="0.01"
                     min="0.01"
                     required
@@ -425,19 +549,31 @@ export default function Donations() {
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
+                    setBatchMode(false);
+                    setBatchCount(0);
+                    setForm({
+                      donorId: "",
+                      amount: "",
+                      donationDate: new Date().toISOString().split("T")[0],
+                      paymentMethod: "",
+                      checkNumber: "",
+                      fund: "",
+                      campaign: "",
+                      notes: "",
+                    });
                     searchParams.delete("action");
                     searchParams.delete("donorId");
                     setSearchParams(searchParams);
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Cancel
+                  {batchMode ? `Finish Batch (${batchCount} entered)` : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
                 >
-                  Record Donation
+                  {batchMode ? "Save & Next" : "Record Donation"}
                 </button>
               </div>
             </form>

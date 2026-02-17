@@ -81,3 +81,19 @@ export type DashboardStats = {
   yearlyCount: number;
   totalDonors: number;
 };
+
+export type TaxLetter = {
+  id: string;
+  organizationId: string;
+  donorId: string;
+  year: number;
+  totalAmount: number;
+  letterDate: string;
+  sentDate?: string;
+  createdAt: string;
+  donor?: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
+};

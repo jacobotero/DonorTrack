@@ -20,55 +20,61 @@ router.get(
         return;
       }
 
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      // Build date filter based on query params
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      const { startDate, endDate } = req.query;
 
-      const [
-        monthlyDonations,
-        yearlyDonations,
-        totalDonors,
-        recentDonations,
-      ] = await Promise.all([
-        prisma.donation.aggregate({
-          where: {
-            organizationId: org.id,
-            isDeleted: false,
-            donationDate: { gte: startOfMonth },
-          },
-          _sum: { amount: true },
-          _count: true,
-        }),
-        prisma.donation.aggregate({
-          where: {
-            organizationId: org.id,
-            isDeleted: false,
-            donationDate: { gte: startOfYear },
-          },
-          _sum: { amount: true },
-          _count: true,
-        }),
-        prisma.donor.count({
-          where: { organizationId: org.id },
-        }),
-        prisma.donation.findMany({
-          where: { organizationId: org.id, isDeleted: false },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-          include: {
-            donor: {
-              select: { firstName: true, lastName: true },
+      if (startDate && typeof startDate === "string") {
+        dateFilter.gte = new Date(startDate);
+      }
+      if (endDate && typeof endDate === "string") {
+        dateFilter.lte = new Date(endDate);
+      }
+
+      const filteredWhere = {
+        organizationId: org.id,
+        isDeleted: false,
+        ...(Object.keys(dateFilter).length > 0 && { donationDate: dateFilter }),
+      };
+
+      const allTimeWhere = {
+        organizationId: org.id,
+        isDeleted: false,
+      };
+
+      const [filteredDonations, allTimeDonations, totalDonors, recentDonations] =
+        await Promise.all([
+          prisma.donation.aggregate({
+            where: filteredWhere,
+            _sum: { amount: true },
+            _count: true,
+          }),
+          prisma.donation.aggregate({
+            where: allTimeWhere,
+            _sum: { amount: true },
+            _count: true,
+          }),
+          prisma.donor.count({
+            where: { organizationId: org.id },
+          }),
+          prisma.donation.findMany({
+            where: { organizationId: org.id, isDeleted: false },
+            orderBy: { createdAt: "desc" },
+            take: 10,
+            include: {
+              donor: {
+                select: { firstName: true, lastName: true },
+              },
             },
-          },
-        }),
-      ]);
+          }),
+        ]);
 
       res.json({
         stats: {
-          monthlyTotal: Number(monthlyDonations._sum.amount || 0),
-          monthlyCount: monthlyDonations._count,
-          yearlyTotal: Number(yearlyDonations._sum.amount || 0),
-          yearlyCount: yearlyDonations._count,
+          monthlyTotal: Number(filteredDonations._sum.amount || 0),
+          monthlyCount: filteredDonations._count,
+          yearlyTotal: Number(allTimeDonations._sum.amount || 0),
+          yearlyCount: allTimeDonations._count,
           totalDonors,
         },
         recentDonations,

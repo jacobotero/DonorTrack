@@ -2,8 +2,14 @@ import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 import { authenticate } from "../middleware/auth";
 import { Prisma } from "../generated/prisma/client";
+import { stringify } from "csv-stringify/sync";
+import { parse } from "csv-parse/sync";
+import multer from "multer";
 
 const router = Router();
+
+// Configure multer for CSV uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 async function getOrgId(userId: string): Promise<string | null> {
   const org = await prisma.organization.findFirst({
@@ -108,6 +114,152 @@ router.get(
     } catch (error) {
       console.error("List donors error:", error);
       res.status(500).json({ error: "Failed to list donors" });
+    }
+  }
+);
+
+// GET /api/donors/export - Export donors as CSV
+router.get(
+  "/export",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const orgId = await getOrgId(req.user!.userId);
+      if (!orgId) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      const donors = await prisma.donor.findMany({
+        where: { organizationId: orgId },
+        orderBy: { lastName: "asc" },
+      });
+
+      // Convert donors to CSV format
+      const csvData = donors.map((donor) => ({
+        firstName: donor.firstName,
+        lastName: donor.lastName,
+        email: donor.email || "",
+        phone: donor.phone || "",
+        addressLine1: donor.addressLine1 || "",
+        addressLine2: donor.addressLine2 || "",
+        city: donor.city || "",
+        state: donor.state || "",
+        zip: donor.zip || "",
+        donorType: donor.donorType || "",
+        tags: donor.tags.join(";"),
+        notes: donor.notes || "",
+      }));
+
+      const csv = stringify(csvData, {
+        header: true,
+        columns: [
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "addressLine1",
+          "addressLine2",
+          "city",
+          "state",
+          "zip",
+          "donorType",
+          "tags",
+          "notes",
+        ],
+      });
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", 'attachment; filename="donors.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error("Export donors error:", error);
+      res.status(500).json({ error: "Failed to export donors" });
+    }
+  }
+);
+
+// POST /api/donors/import - Import donors from CSV
+router.post(
+  "/import",
+  authenticate,
+  upload.single("file"),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const orgId = await getOrgId(req.user!.userId);
+      if (!orgId) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({ error: "No file uploaded" });
+        return;
+      }
+
+      const csvContent = req.file.buffer.toString("utf-8");
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
+
+      const imported: any[] = [];
+      const errors: any[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        try {
+          // Validate required fields
+          if (!row.firstName || !row.lastName) {
+            errors.push({
+              row: i + 1,
+              error: "First name and last name are required",
+            });
+            continue;
+          }
+
+          // Parse tags from semicolon-separated string
+          const tags = row.tags
+            ? row.tags.split(";").map((t: string) => t.trim()).filter(Boolean)
+            : [];
+
+          const donor = await prisma.donor.create({
+            data: {
+              organizationId: orgId,
+              firstName: row.firstName,
+              lastName: row.lastName,
+              email: row.email || null,
+              phone: row.phone || null,
+              addressLine1: row.addressLine1 || null,
+              addressLine2: row.addressLine2 || null,
+              city: row.city || null,
+              state: row.state || null,
+              zip: row.zip || null,
+              donorType: row.donorType || null,
+              tags,
+              notes: row.notes || null,
+            },
+          });
+
+          imported.push(donor);
+        } catch (error: any) {
+          errors.push({
+            row: i + 1,
+            error: error.message || "Failed to import donor",
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: imported.length,
+        errors: errors.length,
+        errorDetails: errors,
+      });
+    } catch (error) {
+      console.error("Import donors error:", error);
+      res.status(500).json({ error: "Failed to import donors" });
     }
   }
 );

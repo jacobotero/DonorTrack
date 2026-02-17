@@ -69,6 +69,8 @@ model Donor {
   @@unique([organizationId, email])
   @@index([organizationId])
   @@index([lastName, firstName])
+  @@index([organizationId, createdAt])
+  @@index([email])
   @@map("donors")
 }
 
@@ -93,6 +95,8 @@ model Donation {
   @@index([organizationId])
   @@index([donorId])
   @@index([donationDate])
+  @@index([organizationId, donationDate])
+  @@index([organizationId, isDeleted, donationDate])
   @@map("donations")
 }
 
@@ -106,6 +110,8 @@ model Fund {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
+  @@index([organizationId, isActive])
   @@map("funds")
 }
 
@@ -122,5 +128,8 @@ model TaxLetter {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   donor        Donor        @relation(fields: [donorId], references: [id], onDelete: Cascade)
 
+  @@unique([organizationId, donorId, year], name: "tax_letter_unique")
+  @@index([organizationId, year])
+  @@index([donorId])
   @@map("tax_letters")
 }

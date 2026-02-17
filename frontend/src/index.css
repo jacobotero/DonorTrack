@@ -5,3 +5,63 @@ body {
   min-height: 100vh;
   background-color: #f8fafc;
 }
+
+/* Print Styles */
+@media print {
+  /* Hide navigation and non-essential elements when printing */
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Optimize page layout for printing */
+  body {
+    background-color: white;
+    color: black;
+  }
+
+  /* Ensure cards and containers print nicely */
+  .print-container {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Optimize table printing */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Set print-friendly margins */
+  @page {
+    margin: 1cm;
+  }
+
+  /* Ensure text is readable */
+  * {
+    color: black !important;
+    background: white !important;
+  }
+
+  /* Keep borders visible */
+  .border,
+  .border-gray-200,
+  .border-gray-300 {
+    border: 1px solid #d1d5db !important;
+  }
+
+  /* Improve spacing */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+  }
+}

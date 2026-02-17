@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, Upload, Download } from "lucide-react";
 import api from "../lib/api";
 import type { Donor, Pagination } from "../types";
 import toast from "react-hot-toast";
@@ -23,6 +23,11 @@ export default function Donors() {
   const [showAddModal, setShowAddModal] = useState(
     searchParams.get("action") === "add"
   );
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [donorTypeFilter, setDonorTypeFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   // Add donor form
   const [form, setForm] = useState({
@@ -42,11 +47,22 @@ export default function Donors() {
     setLoading(true);
     const params: Record<string, string> = { page: String(page), limit: "25" };
     if (search) params.search = search;
+    if (donorTypeFilter) params.donorType = donorTypeFilter;
+    if (tagFilter) params.tag = tagFilter;
     api
       .get("/donors", { params })
       .then((res) => {
         setDonors(res.data.donors);
         setPagination(res.data.pagination);
+
+        // Extract unique tags from all donors
+        const tags = new Set<string>();
+        res.data.donors.forEach((donor: Donor) => {
+          if (donor.tags) {
+            donor.tags.forEach((tag: string) => tags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(tags).sort());
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -59,6 +75,29 @@ export default function Donors() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchDonors();
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setDonorTypeFilter("");
+    setTagFilter("");
+    // Fetch immediately with no filters by calling API directly
+    setLoading(true);
+    api
+      .get("/donors", { params: { page: "1", limit: "25" } })
+      .then((res) => {
+        setDonors(res.data.donors);
+        setPagination(res.data.pagination);
+        const tags = new Set<string>();
+        res.data.donors.forEach((donor: Donor) => {
+          if (donor.tags) {
+            donor.tags.forEach((tag: string) => tags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(tags).sort());
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
   const handleAddDonor = async (e: React.FormEvent) => {
@@ -87,21 +126,97 @@ export default function Donors() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await api.get("/donors/export", {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `donors-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Donors exported successfully");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to export donors");
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/donors/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const { imported, errors, errorDetails } = response.data;
+      if (errors > 0) {
+        toast.error(
+          `Imported ${imported} donors with ${errors} errors. Check console for details.`
+        );
+        console.error("Import errors:", errorDetails);
+      } else {
+        toast.success(`Successfully imported ${imported} donors`);
+      }
+      fetchDonors();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to import donors");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Donors</h1>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-        >
-          <Plus className="w-4 h-4" />
-          Add Donor
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" />
+            {importing ? "Importing..." : "Import CSV"}
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+          >
+            <Plus className="w-4 h-4" />
+            Add Donor
+          </button>
+        </div>
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="mb-6">
+      <form onSubmit={handleSearch} className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -113,6 +228,51 @@ export default function Donors() {
           />
         </div>
       </form>
+
+      {/* Filters */}
+      <div className="flex gap-4 mb-6 flex-wrap items-center">
+        <select
+          value={donorTypeFilter}
+          onChange={(e) => setDonorTypeFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+        >
+          <option value="">All Donor Types</option>
+          {DONOR_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={tagFilter}
+          onChange={(e) => setTagFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+        >
+          <option value="">All Tags</option>
+          {availableTags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => fetchDonors()}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+        >
+          Apply Filters
+        </button>
+
+        {(donorTypeFilter || tagFilter || search) && (
+          <button
+            onClick={handleClearFilters}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
 
       {/* Donor List */}
       <div className="bg-white rounded-xl border border-gray-200">

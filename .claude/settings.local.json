@@ -1,22 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm init -y)",
       "Bash(npm install:*)",
-      "Bash(npm create vite@latest . -- --template react-ts)",
-      "Bash(npx prisma init:*)",
-      "Bash(npx prisma generate:*)",
-      "Bash(npx tsc:*)",
-      "Bash(node -e:*)",
-      "Bash(npx vite build)",
-      "Bash(where psql:*)",
-      "Bash(where docker:*)",
-      "Bash(export PATH=\"/c/Program Files/PostgreSQL/18/bin:$PATH\")",
-      "Bash(psql --version:*)",
-      "Bash(PGPASSWORD=postgres psql:*)",
-      "Bash(npx prisma db push:*)",
       "Bash(npm run dev)",
-      "Bash(curl:*)"
-    ]
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(curl:*)",
+      "Bash(npm audit:*)",
+      "Bash(git add:*)"
+    ],
+    "mode": "unrestricted"
   }
 }

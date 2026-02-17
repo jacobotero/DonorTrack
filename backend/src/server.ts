@@ -1,8 +1,10 @@
 import app from "./app";
+import { validateEnv, config } from "./config/env";
 
-const PORT = parseInt(process.env.PORT || "3000", 10);
+// Validate environment variables before starting server
+validateEnv();
 
-app.listen(PORT, () => {
-  console.log(`DonorTrack API running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+app.listen(config.server.port, () => {
+  console.log(`DonorTrack API running on http://localhost:${config.server.port}`);
+  console.log(`Environment: ${config.server.env}`);
 });

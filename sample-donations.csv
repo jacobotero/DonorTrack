@@ -1,0 +1,16 @@
+donorFirstName,donorLastName,donorEmail,amount,donationDate,paymentMethod,checkNumber,fund,campaign,notes
+John,Smith,john.smith@email.com,100.00,2026-01-15,Check,1001,General Fund,New Year Campaign,Monthly recurring gift
+Sarah,Johnson,sarah.j@email.com,5000.00,2026-01-20,Bank Transfer,,Building Fund,Capital Campaign,Major gift pledge payment
+Michael,Williams,michael.w@company.com,2500.00,2026-01-25,Check,2047,General Fund,Annual Corporate,Corporate sponsor 2026
+Emily,Davis,emily.davis@email.com,50.00,2026-02-01,Credit Card,,General Fund,,First donation
+John,Smith,john.smith@email.com,100.00,2026-02-05,Check,1045,General Fund,New Year Campaign,Monthly recurring gift
+The Martinez Family,Martinez,martinez.family@email.com,250.00,2026-02-08,Cash,,General Fund,Winter Campaign,
+Robert,Brown,robert.brown@email.com,75.00,2026-02-10,Bank Transfer,,General Fund,,Monthly automatic transfer
+Jennifer,Garcia,jennifer.g@email.com,150.00,2026-02-12,Check,3012,Music Ministry,Winter Campaign,
+Patricia,Wilson,patricia.w@email.com,35.00,2026-02-14,Cash,,General Fund,,
+Sarah,Johnson,sarah.j@email.com,1000.00,2026-02-15,Check,5234,Building Fund,Capital Campaign,Second pledge payment
+Anderson Corp,Anderson,donations@andersoncorp.com,3000.00,2026-02-16,Check,8891,General Fund,Corporate Match,Matching employee gifts
+John,Smith,john.smith@email.com,100.00,2026-02-17,Check,1089,General Fund,New Year Campaign,Monthly recurring gift - current month
+Grace Foundation,Thompson,info@gracefoundation.org,10000.00,2026-01-10,Bank Transfer,,Program Fund,Annual Grant,Annual foundation grant
+Robert,Brown,robert.brown@email.com,75.00,2026-01-30,Bank Transfer,,General Fund,,Monthly automatic transfer
+Emily,Davis,emily.davis@email.com,100.00,2026-02-03,Credit Card,,General Fund,Winter Campaign,

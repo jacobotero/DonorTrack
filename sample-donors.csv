@@ -1,0 +1,11 @@
+firstName,lastName,email,phone,addressLine1,addressLine2,city,state,zip,donorType,tags,notes
+John,Smith,john.smith@email.com,555-0101,123 Main St,,Springfield,IL,62701,Individual,Regular;Monthly,"Longtime supporter since 2020"
+Sarah,Johnson,sarah.j@email.com,555-0102,456 Oak Ave,Apt 2B,Chicago,IL,60601,Individual,VIP;Major Donor,"Board member and major donor"
+Michael,Williams,michael.w@company.com,555-0103,789 Elm Street,,Naperville,IL,60540,Business,Corporate;Annual,"Annual corporate sponsor"
+The Martinez Family,Martinez,martinez.family@email.com,555-0104,321 Pine Road,,Aurora,IL,60505,Family,Regular,"Family giving fund"
+Emily,Davis,emily.davis@email.com,555-0105,654 Maple Dr,,Peoria,IL,61602,Individual,New Donor,"First-time donor 2024"
+Grace Foundation,Thompson,info@gracefoundation.org,555-0106,987 Cedar Lane,Suite 100,Rockford,IL,61101,Foundation,Major Donor;Grant,"Provides annual grants"
+Robert,Brown,robert.brown@email.com,555-0107,147 Birch St,,Bloomington,IL,61701,Individual,Monthly;Legacy,"Monthly donor with legacy gift planned"
+Jennifer,Garcia,jennifer.g@email.com,555-0108,258 Walnut Ave,,Champaign,IL,61820,Individual,Regular,"Regular attendee and supporter"
+Anderson Corp,Anderson,donations@andersoncorp.com,555-0109,369 Spruce Blvd,,Decatur,IL,62521,Business,Corporate,"Corporate matching gift program"
+Patricia,Wilson,patricia.w@email.com,555-0110,741 Ash Court,,Springfield,IL,62704,Individual,Senior;Regular,"Retired volunteer and donor"

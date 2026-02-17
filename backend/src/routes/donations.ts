@@ -2,8 +2,14 @@ import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 import { authenticate } from "../middleware/auth";
 import { Prisma } from "../generated/prisma/client";
+import { stringify } from "csv-stringify/sync";
+import { parse } from "csv-parse/sync";
+import multer from "multer";
 
 const router = Router();
+
+// Configure multer for CSV uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 async function getOrgId(userId: string): Promise<string | null> {
   const org = await prisma.organization.findFirst({
@@ -79,6 +85,187 @@ router.get(
     } catch (error) {
       console.error("List donations error:", error);
       res.status(500).json({ error: "Failed to list donations" });
+    }
+  }
+);
+
+// GET /api/donations/export - Export donations as CSV
+router.get(
+  "/export",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const orgId = await getOrgId(req.user!.userId);
+      if (!orgId) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      const donations = await prisma.donation.findMany({
+        where: { organizationId: orgId, isDeleted: false },
+        orderBy: { donationDate: "desc" },
+        include: {
+          donor: {
+            select: { firstName: true, lastName: true, email: true },
+          },
+        },
+      });
+
+      // Convert donations to CSV format
+      const csvData = donations.map((donation) => ({
+        donorFirstName: donation.donor.firstName,
+        donorLastName: donation.donor.lastName,
+        donorEmail: donation.donor.email || "",
+        amount: donation.amount,
+        donationDate: donation.donationDate.toISOString().split("T")[0],
+        paymentMethod: donation.paymentMethod || "",
+        checkNumber: donation.checkNumber || "",
+        fund: donation.fund || "",
+        campaign: donation.campaign || "",
+        notes: donation.notes || "",
+      }));
+
+      const csv = stringify(csvData, {
+        header: true,
+        columns: [
+          "donorFirstName",
+          "donorLastName",
+          "donorEmail",
+          "amount",
+          "donationDate",
+          "paymentMethod",
+          "checkNumber",
+          "fund",
+          "campaign",
+          "notes",
+        ],
+      });
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", 'attachment; filename="donations.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error("Export donations error:", error);
+      res.status(500).json({ error: "Failed to export donations" });
+    }
+  }
+);
+
+// POST /api/donations/import - Import donations from CSV
+router.post(
+  "/import",
+  authenticate,
+  upload.single("file"),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const orgId = await getOrgId(req.user!.userId);
+      if (!orgId) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({ error: "No file uploaded" });
+        return;
+      }
+
+      const csvContent = req.file.buffer.toString("utf-8");
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
+
+      const imported: any[] = [];
+      const errors: any[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        try {
+          // Validate required fields
+          if (!row.donorEmail || !row.amount || !row.donationDate) {
+            errors.push({
+              row: i + 1,
+              error: "Donor email, amount, and date are required",
+            });
+            continue;
+          }
+
+          // Parse and validate amount
+          const numAmount = parseFloat(row.amount);
+          if (isNaN(numAmount) || numAmount <= 0) {
+            errors.push({
+              row: i + 1,
+              error: "Amount must be a positive number",
+            });
+            continue;
+          }
+
+          // Parse and validate date
+          const date = new Date(row.donationDate);
+          if (isNaN(date.getTime())) {
+            errors.push({
+              row: i + 1,
+              error: "Invalid donation date format",
+            });
+            continue;
+          }
+          if (date > new Date()) {
+            errors.push({
+              row: i + 1,
+              error: "Donation date cannot be in the future",
+            });
+            continue;
+          }
+
+          // Find donor by email
+          const donor = await prisma.donor.findFirst({
+            where: {
+              organizationId: orgId,
+              email: row.donorEmail,
+            },
+          });
+
+          if (!donor) {
+            errors.push({
+              row: i + 1,
+              error: `Donor with email ${row.donorEmail} not found`,
+            });
+            continue;
+          }
+
+          const donation = await prisma.donation.create({
+            data: {
+              organizationId: orgId,
+              donorId: donor.id,
+              amount: numAmount,
+              donationDate: date,
+              paymentMethod: row.paymentMethod || null,
+              checkNumber: row.checkNumber || null,
+              fund: row.fund || null,
+              campaign: row.campaign || null,
+              notes: row.notes || null,
+            },
+          });
+
+          imported.push(donation);
+        } catch (error: any) {
+          errors.push({
+            row: i + 1,
+            error: error.message || "Failed to import donation",
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: imported.length,
+        errors: errors.length,
+        errorDetails: errors,
+      });
+    } catch (error) {
+      console.error("Import donations error:", error);
+      res.status(500).json({ error: "Failed to import donations" });
     }
   }
 );
