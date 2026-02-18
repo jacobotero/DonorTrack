@@ -12,61 +12,84 @@ export interface EmailOptions {
   }>;
 }
 
+export interface OrgSmtpConfig {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  fromName: string;
+  fromEmail: string; // org's registered email
+}
+
+function createTransporter(config: OrgSmtpConfig) {
+  return nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.port === 465,
+    auth: {
+      user: config.user,
+      pass: config.pass,
+    },
+  });
+}
+
 class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  // Lazily initialized on first use so dotenv has time to load
+  private getSystemTransporter(): nodemailer.Transporter | null {
+    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
-  constructor() {
-    this.initializeTransporter();
-  }
-
-  private initializeTransporter() {
-    const {
-      SMTP_HOST,
-      SMTP_PORT,
-      SMTP_USER,
-      SMTP_PASS,
-      SMTP_FROM,
-      SMTP_FROM_NAME,
-    } = process.env;
-
-    // If no SMTP config, use development mode with ethereal
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-      console.log(
-        "⚠️  No SMTP configuration found. Emails will be logged to console only."
-      );
-      console.log(
-        "💡 To enable email sending, add SMTP credentials to your .env file."
-      );
-      return;
+      return null;
     }
 
+    return nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: parseInt(SMTP_PORT || "587"),
+      secure: parseInt(SMTP_PORT || "587") === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+  }
+
+  // Send using org-specific SMTP (for tax letters sent from org's own email)
+  async sendEmailWithOrgConfig(options: EmailOptions, orgConfig: OrgSmtpConfig): Promise<boolean> {
     try {
-      this.transporter = nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: parseInt(SMTP_PORT || "587"),
-        secure: parseInt(SMTP_PORT || "587") === 465,
-        auth: {
-          user: SMTP_USER,
-          pass: SMTP_PASS,
-        },
+      const transporter = createTransporter(orgConfig);
+      const from = `"${orgConfig.fromName}" <${orgConfig.fromEmail}>`;
+
+      await transporter.sendMail({
+        from,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html || options.text,
+        attachments: options.attachments,
       });
 
-      console.log("✅ Email service initialized successfully");
+      console.log(`✅ Email sent from ${orgConfig.fromEmail} to ${options.to}`);
+      return true;
     } catch (error) {
-      console.error("❌ Failed to initialize email service:", error);
+      console.error("❌ Failed to send email with org SMTP:", error);
+      throw error;
     }
   }
 
+  // Test org SMTP credentials
+  async testOrgSmtp(orgConfig: OrgSmtpConfig): Promise<void> {
+    const transporter = createTransporter(orgConfig);
+    await transporter.verify();
+  }
+
+  // Send using system SMTP (for verification emails etc.)
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.transporter) {
+    const transporter = this.getSystemTransporter();
+
+    if (!transporter) {
       console.log("\n📧 Email would be sent (SMTP not configured):");
       console.log(`To: ${options.to}`);
       console.log(`Subject: ${options.subject}`);
       console.log(`Body: ${options.text}`);
       if (options.attachments) {
-        console.log(
-          `Attachments: ${options.attachments.map((a) => a.filename).join(", ")}`
-        );
+        console.log(`Attachments: ${options.attachments.map((a) => a.filename).join(", ")}`);
       }
       console.log("\n");
       return false;
@@ -74,11 +97,9 @@ class EmailService {
 
     try {
       const { SMTP_FROM, SMTP_FROM_NAME } = process.env;
-      const from = SMTP_FROM_NAME
-        ? `"${SMTP_FROM_NAME}" <${SMTP_FROM}>`
-        : SMTP_FROM;
+      const from = SMTP_FROM_NAME ? `"${SMTP_FROM_NAME}" <${SMTP_FROM}>` : SMTP_FROM;
 
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from,
         to: options.to,
         subject: options.subject,

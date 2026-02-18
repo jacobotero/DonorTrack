@@ -198,14 +198,14 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex gap-3">
           <Link
-            to="/donors?action=add"
+            to="/app/donors?action=add"
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Plus className="w-4 h-4" />
             Add Donor
           </Link>
           <Link
-            to="/donations?action=add"
+            to="/app/donations?action=add"
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
           >
             <Plus className="w-4 h-4" />
@@ -403,7 +403,7 @@ export default function Dashboard() {
           <div className="p-8 text-center text-gray-500">
             <p>No donations recorded yet.</p>
             <Link
-              to="/donations?action=add"
+              to="/app/donations?action=add"
               className="text-emerald-600 hover:text-emerald-700 font-medium text-sm mt-2 inline-block"
             >
               Record your first donation

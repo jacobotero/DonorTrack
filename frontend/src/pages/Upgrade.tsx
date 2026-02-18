@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle, CreditCard, Lock, ArrowLeft, AlertCircle } from "lucide-react";
+import { CheckCircle, Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
+import api from "../lib/api";
 
 type Plan = "STARTER" | "GROWTH" | "PLUS";
 
@@ -58,31 +59,39 @@ export default function Upgrade() {
   const [searchParams] = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<Plan>("GROWTH");
   const [processing, setProcessing] = useState(false);
-  const [paymentDetails, setPaymentDetails] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-  });
 
   const currentPlan = user?.organization?.subscriptionTier || "STARTER";
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
   const trialExpired = searchParams.get("trial_expired") === "true";
+  const canceled = searchParams.get("canceled") === "true";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
 
-    // TODO: Integrate with Stripe or payment processor
-    // For now, just show a success message
-    setTimeout(() => {
-      toast.success(
-        `Payment processed! You've been upgraded to ${selectedPlanData?.name}. This is a demo - payment integration coming soon.`
+    try {
+      // Create checkout session
+      const sessionRes = await api.post("/stripe/create-checkout-session", {
+        plan: selectedPlan,
+      });
+
+      const { url } = sessionRes.data;
+
+      if (!url) {
+        toast.error("Failed to create checkout session. Please try again.");
+        setProcessing(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout (modern approach)
+      window.location.href = url;
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to start checkout process"
       );
       setProcessing(false);
-      // Navigate back to settings or dashboard
-      navigate("/app/settings");
-    }, 2000);
+    }
   };
 
   return (
@@ -109,6 +118,24 @@ export default function Upgrade() {
             </p>
           )}
         </div>
+
+        {/* Payment Canceled Banner */}
+        {canceled && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-12">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900 mb-2">
+                  Payment Canceled
+                </h3>
+                <p className="text-amber-800">
+                  Your payment was canceled. No charges were made. Feel free to
+                  select a plan below when you're ready to upgrade.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Trial Expired Banner */}
         {trialExpired && (
@@ -209,130 +236,44 @@ export default function Upgrade() {
             </div>
           </div>
 
-          {/* Payment Form */}
+          {/* Checkout Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
-                Payment Details
+                Selected Plan
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Plan Summary */}
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedPlanData?.name} Plan
-                    </span>
-                    <span className="text-lg font-bold text-emerald-700">
-                      ${selectedPlanData?.price}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    Billed monthly • Cancel anytime
-                  </p>
+              {/* Plan Summary */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedPlanData?.name} Plan
+                  </span>
+                  <span className="text-lg font-bold text-emerald-700">
+                    ${selectedPlanData?.price}
+                  </span>
                 </div>
-
-                {/* Card Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Card Number
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      value={paymentDetails.cardNumber}
-                      onChange={(e) =>
-                        setPaymentDetails({
-                          ...paymentDetails,
-                          cardNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                      required
-                    />
-                    <CreditCard className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-                  </div>
-                </div>
-
-                {/* Cardholder Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cardholder Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={paymentDetails.cardName}
-                    onChange={(e) =>
-                      setPaymentDetails({
-                        ...paymentDetails,
-                        cardName: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                    required
-                  />
-                </div>
-
-                {/* Expiry & CVV */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      value={paymentDetails.expiryDate}
-                      onChange={(e) =>
-                        setPaymentDetails({
-                          ...paymentDetails,
-                          expiryDate: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CVV
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="123"
-                      value={paymentDetails.cvv}
-                      onChange={(e) =>
-                        setPaymentDetails({
-                          ...paymentDetails,
-                          cvv: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={processing || selectedPlan === currentPlan}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Lock className="w-4 h-4" />
-                  {processing
-                    ? "Processing..."
-                    : `Pay $${selectedPlanData?.price}/month`}
-                </button>
-
-                {/* Security Note */}
-                <p className="text-xs text-center text-gray-500 mt-4">
-                  <Lock className="w-3 h-3 inline mr-1" />
-                  Secure payment processing
+                <p className="text-xs text-gray-600 mb-1">
+                  Billed monthly • Cancel anytime
                 </p>
-              </form>
+                <p className="text-xs text-gray-600">
+                  Payment securely processed by Stripe
+                </p>
+              </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={handleSubmit}
+                disabled={processing || selectedPlan === currentPlan}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-lg font-semibold text-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
+              >
+                <Lock className="w-5 h-5" />
+                {processing ? "Redirecting..." : "Continue to Checkout"}
+              </button>
+
+              <p className="text-xs text-center text-gray-500 mt-4">
+                You'll enter payment details on the secure Stripe checkout page
+              </p>
 
               {/* Trial Info */}
               <div className="mt-6 pt-6 border-t border-gray-200">

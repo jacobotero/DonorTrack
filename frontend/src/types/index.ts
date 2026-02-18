@@ -20,6 +20,11 @@ export type Organization = {
   logoUrl?: string;
   subscriptionTier: "STARTER" | "GROWTH" | "PLUS";
   trialEndsAt?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpFromName?: string;
+  smtpConfigured?: boolean;
 };
 
 export type Donor = {

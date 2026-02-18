@@ -12,6 +12,7 @@ import {
   Cell,
 } from "recharts";
 import api from "../lib/api";
+import toast from "react-hot-toast";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -51,8 +52,9 @@ export default function Reports() {
 
       const res = await api.get(endpoint, { params });
       setData(res.data);
-    } catch {
+    } catch (error: any) {
       setData(null);
+      toast.error(error.response?.data?.error || "Failed to load report. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -55,7 +55,7 @@ export default function DonorDetail() {
     try {
       await api.delete(`/donors/${id}`);
       toast.success("Donor deleted");
-      navigate("/donors");
+      navigate("/app/donors");
     } catch {
       toast.error("Failed to delete donor");
     }
@@ -76,7 +76,7 @@ export default function DonorDetail() {
   return (
     <div>
       <Link
-        to="/donors"
+        to="/app/donors"
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Donors
@@ -144,6 +144,53 @@ export default function DonorDetail() {
                 placeholder="Phone"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
+              <select
+                value={editForm.donorType || ""}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, donorType: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">Select donor type</option>
+                <option value="Individual">Individual</option>
+                <option value="Family">Family</option>
+                <option value="Business">Business</option>
+                <option value="Foundation">Foundation</option>
+              </select>
+              <input
+                value={editForm.addressLine1 || ""}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, addressLine1: e.target.value })
+                }
+                placeholder="Street address"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <input
+                  value={editForm.city || ""}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, city: e.target.value })
+                  }
+                  placeholder="City"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <input
+                  value={editForm.state || ""}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, state: e.target.value })
+                  }
+                  placeholder="State"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <input
+                  value={editForm.zip || ""}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, zip: e.target.value })
+                  }
+                  placeholder="ZIP"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
               <textarea
                 value={editForm.notes || ""}
                 onChange={(e) =>
@@ -226,7 +273,7 @@ export default function DonorDetail() {
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">Donation History</h2>
               <Link
-                to={`/donations?action=add&donorId=${donor.id}`}
+                to={`/app/donations?action=add&donorId=${donor.id}`}
                 className="flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
               >
                 <Plus className="w-4 h-4" />

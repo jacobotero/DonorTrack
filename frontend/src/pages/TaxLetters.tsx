@@ -78,7 +78,7 @@ export default function TaxLetters() {
 
   const fetchDonors = () => {
     api
-      .get("/donors", { params: { limit: "1000" } })
+      .get("/donors", { params: { all: "true" } })
       .then((res) => {
         setDonors(res.data.donors);
       })

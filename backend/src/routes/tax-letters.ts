@@ -3,7 +3,7 @@ import PDFDocument from "pdfkit";
 import archiver from "archiver";
 import prisma from "../prisma";
 import { authenticate } from "../middleware/auth";
-import { emailService } from "../utils/email";
+import { emailService, OrgSmtpConfig } from "../utils/email";
 
 const router = Router();
 
@@ -17,7 +17,7 @@ async function getOrgId(userId: string): Promise<string | null> {
 
 // Generate IRS-compliant tax letter PDF
 function generateTaxLetterPDF(
-  doc: PDFDocument,
+  doc: InstanceType<typeof PDFDocument>,
   orgData: {
     name: string;
     addressLine1?: string | null;
@@ -331,23 +331,7 @@ router.get(
         },
         include: {
           organization: true,
-          donor: {
-            include: {
-              donations: {
-                where: {
-                  isDeleted: false,
-                  donationDate: {
-                    gte: new Date(`${2020}-01-01`), // Will be replaced with letter.year
-                    lte: new Date(`${2020}-12-31`),
-                  },
-                },
-                select: {
-                  donationDate: true,
-                  amount: true,
-                },
-              },
-            },
-          },
+          donor: true,
         },
       });
 
@@ -356,7 +340,7 @@ router.get(
         return;
       }
 
-      // Re-fetch donations for the correct year
+      // Fetch donations for the letter year
       const donations = await prisma.donation.findMany({
         where: {
           donorId: letter.donor.id,
@@ -487,7 +471,7 @@ router.get(
 
         const fileName = `${letter.donor.lastName}-${letter.donor.firstName}-${yearNum}.pdf`;
 
-        archive.append(doc, { name: fileName });
+        archive.append(doc as any, { name: fileName });
 
         doc.end();
       }
@@ -625,6 +609,20 @@ router.post(
         return;
       }
 
+      // Fetch the manager's login email to use as "From" address
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        select: { email: true, emailVerified: true },
+      });
+
+      if (!user?.emailVerified) {
+        res.status(403).json({
+          error: "Email not verified",
+          message: "Please verify your email address before sending tax letters.",
+        });
+        return;
+      }
+
       const letter = await prisma.taxLetter.findFirst({
         where: {
           id: req.params.id,
@@ -643,6 +641,17 @@ router.post(
 
       if (!letter.donor.email) {
         res.status(400).json({ error: "Donor does not have an email address" });
+        return;
+      }
+
+      // Require org SMTP to be configured
+      const org = letter.organization;
+      if (!org.smtpHost || !org.smtpUser || !org.smtpPass) {
+        res.status(400).json({
+          error: "Email not configured",
+          message: "Please configure your email settings in Settings before sending tax letters.",
+          setupRequired: true,
+        });
         return;
       }
 
@@ -689,11 +698,16 @@ router.post(
 
       const pdfBuffer = Buffer.concat(chunks);
 
-      // Send email with PDF attachment
-      const emailSent = await emailService.sendEmail({
-        to: letter.donor.email,
-        subject: `${letter.year} Tax Receipt from ${letter.organization.name}`,
-        text: `Dear ${letter.donor.firstName} ${letter.donor.lastName},
+      const orgConfig: OrgSmtpConfig = {
+        host: org.smtpHost!,
+        port: org.smtpPort || 587,
+        user: org.smtpUser!,
+        pass: org.smtpPass!,
+        fromName: org.smtpFromName || org.name,
+        fromEmail: user?.email || org.smtpUser!,
+      };
+
+      const emailBody = `Dear ${letter.donor.firstName} ${letter.donor.lastName},
 
 Thank you for your generous support of ${letter.organization.name} during ${letter.year}.
 
@@ -702,41 +716,38 @@ Attached is your official tax receipt for charitable contributions. Please retai
 If you have any questions, please don't hesitate to contact us.
 
 Sincerely,
-${letter.organization.name}`,
-        html: `
-          <p>Dear ${letter.donor.firstName} ${letter.donor.lastName},</p>
+${letter.organization.name}`;
 
-          <p>Thank you for your generous support of <strong>${letter.organization.name}</strong> during ${letter.year}.</p>
+      // Send email with PDF attachment from org's own email
+      await emailService.sendEmailWithOrgConfig(
+        {
+          to: letter.donor.email,
+          subject: `${letter.year} Tax Receipt from ${letter.organization.name}`,
+          text: emailBody,
+          html: `
+            <p>Dear ${letter.donor.firstName} ${letter.donor.lastName},</p>
+            <p>Thank you for your generous support of <strong>${letter.organization.name}</strong> during ${letter.year}.</p>
+            <p>Attached is your official tax receipt for charitable contributions. Please retain this letter for your tax records.</p>
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+            <p>Sincerely,<br>${letter.organization.name}</p>
+          `,
+          attachments: [
+            {
+              filename: `tax-receipt-${letter.year}-${letter.donor.lastName}-${letter.donor.firstName}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ],
+        },
+        orgConfig
+      );
 
-          <p>Attached is your official tax receipt for charitable contributions. Please retain this letter for your tax records.</p>
-
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-
-          <p>Sincerely,<br>
-          ${letter.organization.name}</p>
-        `,
-        attachments: [
-          {
-            filename: `tax-receipt-${letter.year}-${letter.donor.lastName}-${letter.donor.firstName}.pdf`,
-            content: pdfBuffer,
-            contentType: "application/pdf",
-          },
-        ],
-      });
-
-      // Always mark as sent when send-email is called
-      // (even in dev mode without SMTP, since user clicked "Send Email")
       await prisma.taxLetter.update({
         where: { id: req.params.id },
         data: { sentDate: new Date() },
       });
 
-      res.json({
-        message: emailSent
-          ? "Tax letter sent successfully"
-          : "Email logged (SMTP not configured)",
-        emailSent,
-      });
+      res.json({ message: "Tax letter sent successfully", emailSent: true });
     } catch (error) {
       console.error("Send email error:", error);
       res.status(500).json({ error: "Failed to send tax letter via email" });

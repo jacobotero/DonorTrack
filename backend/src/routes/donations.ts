@@ -170,7 +170,7 @@ router.post(
       }
 
       const csvContent = req.file.buffer.toString("utf-8");
-      const records = parse(csvContent, {
+      const records: any[] = parse(csvContent, {
         columns: true,
         skip_empty_lines: true,
         trim: true,
@@ -432,27 +432,46 @@ router.put(
         return;
       }
 
-      if (req.body.amount !== undefined) {
-        const numAmount = parseFloat(req.body.amount);
+      // Whitelist allowed fields to prevent mass assignment
+      const allowedFields: any = {
+        amount: req.body.amount,
+        donorId: req.body.donorId,
+        donationDate: req.body.donationDate,
+        paymentMethod: req.body.paymentMethod,
+        checkNumber: req.body.checkNumber,
+        fund: req.body.fund,
+        campaign: req.body.campaign,
+        notes: req.body.notes,
+      };
+
+      // Validate amount
+      if (allowedFields.amount !== undefined) {
+        const numAmount = parseFloat(allowedFields.amount);
         if (isNaN(numAmount) || numAmount <= 0) {
           res.status(400).json({ error: "Amount must be a positive number" });
           return;
         }
-        req.body.amount = numAmount;
+        allowedFields.amount = numAmount;
       }
 
-      if (req.body.donationDate !== undefined) {
-        const date = new Date(req.body.donationDate);
+      // Validate donation date
+      if (allowedFields.donationDate !== undefined) {
+        const date = new Date(allowedFields.donationDate);
         if (date > new Date()) {
           res.status(400).json({ error: "Donation date cannot be in the future" });
           return;
         }
-        req.body.donationDate = date;
+        allowedFields.donationDate = date;
       }
+
+      // Remove undefined fields
+      Object.keys(allowedFields).forEach(key =>
+        allowedFields[key] === undefined && delete allowedFields[key]
+      );
 
       const donation = await prisma.donation.update({
         where: { id: req.params.id },
-        data: req.body,
+        data: allowedFields,
       });
 
       res.json({ donation });

@@ -2,7 +2,57 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
+
+const EMAIL_PROVIDERS = [
+  {
+    label: "Gmail",
+    host: "smtp.gmail.com",
+    port: "587",
+    passwordLabel: "App Password",
+    passwordHelp: "Gmail requires an App Password — not your regular password. Go to myaccount.google.com → Security → 2-Step Verification → App Passwords to create one.",
+  },
+  {
+    label: "Outlook / Microsoft 365",
+    host: "smtp-mail.outlook.com",
+    port: "587",
+    passwordLabel: "Password",
+    passwordHelp: "Use your regular Microsoft account password.",
+  },
+  {
+    label: "Yahoo Mail",
+    host: "smtp.mail.yahoo.com",
+    port: "587",
+    passwordLabel: "App Password",
+    passwordHelp: "Yahoo requires an App Password. Go to Yahoo Account Security → Generate app password.",
+  },
+  {
+    label: "Zoho Mail",
+    host: "smtp.zoho.com",
+    port: "587",
+    passwordLabel: "Password",
+    passwordHelp: "Use your regular Zoho account password.",
+  },
+  {
+    label: "iCloud Mail",
+    host: "smtp.mail.me.com",
+    port: "587",
+    passwordLabel: "App-Specific Password",
+    passwordHelp: "iCloud requires an App-Specific Password. Go to appleid.apple.com → Sign-In and Security → App-Specific Passwords.",
+  },
+  {
+    label: "Other (enter manually)",
+    host: "",
+    port: "587",
+    passwordLabel: "Password",
+    passwordHelp: "Use the password for your email account.",
+  },
+] as const;
+
+function detectProvider(host: string) {
+  const match = EMAIL_PROVIDERS.find((p) => p.host && p.host === host);
+  return match ? match.label : "Other (enter manually)";
+}
 
 export default function Settings() {
   const [org, setOrg] = useState<Organization | null>(null);
@@ -10,6 +60,17 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newFundName, setNewFundName] = useState("");
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState("Gmail");
+
+  const [emailForm, setEmailForm] = useState({
+    smtpHost: "",
+    smtpPort: "587",
+    smtpUser: "",
+    smtpPass: "",
+    smtpFromName: "",
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -41,6 +102,14 @@ export default function Settings() {
           ein: o.ein || "",
           taxExemptStatus: o.taxExemptStatus || "",
         });
+        setEmailForm({
+          smtpHost: o.smtpHost || "",
+          smtpPort: o.smtpPort ? String(o.smtpPort) : "587",
+          smtpUser: o.smtpUser || "",
+          smtpPass: "", // never pre-fill password
+          smtpFromName: o.smtpFromName || "",
+        });
+        if (o.smtpHost) setSelectedProvider(detectProvider(o.smtpHost));
         setFunds(fundsRes.data.funds);
       })
       .catch(console.error)
@@ -58,6 +127,33 @@ export default function Settings() {
       toast.error("Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await api.put("/organization", emailForm);
+      setOrg(res.data.organization);
+      setEmailForm((prev) => ({ ...prev, smtpPass: "" })); // clear pass field after save
+      toast.success("Email settings saved");
+    } catch {
+      toast.error("Failed to save email settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      await api.post("/organization/test-email", emailForm);
+      toast.success("SMTP connection successful! Your email is configured correctly.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "SMTP connection failed. Check your credentials.");
+    } finally {
+      setTestingEmail(false);
     }
   };
 
@@ -92,7 +188,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-5xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
       {/* Organization Profile */}
@@ -233,14 +329,157 @@ export default function Settings() {
         </form>
       </div>
 
-      {/* Subscription Plan */}
+      {/* Email Settings */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Subscription Plan
-        </h2>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 mb-1">
+          <Mail className="w-5 h-5 text-emerald-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Email Settings</h2>
+          {org?.smtpConfigured && (
+            <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full ml-2">
+              <CheckCircle className="w-3 h-3" /> Configured
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 mb-5">
+          Tax letters will be sent from your organization's email address. Select your email provider below to get started.
+        </p>
+        <form onSubmit={handleSaveEmail} className="space-y-4">
+          {/* Provider picker */}
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Provider</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {EMAIL_PROVIDERS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => {
+                    setSelectedProvider(p.label);
+                    setEmailForm((prev) => ({
+                      ...prev,
+                      smtpHost: p.host,
+                      smtpPort: p.port,
+                    }));
+                  }}
+                  className={`px-3 py-2 rounded-lg border text-sm font-medium text-left transition-colors ${
+                    selectedProvider === p.label
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Manual host/port — only shown for "Other" */}
+          {selectedProvider === "Other (enter manually)" && (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                <input
+                  type="text"
+                  value={emailForm.smtpHost}
+                  onChange={(e) => setEmailForm({ ...emailForm, smtpHost: e.target.value })}
+                  placeholder="smtp.yourdomain.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                <select
+                  value={emailForm.smtpPort}
+                  onChange={(e) => setEmailForm({ ...emailForm, smtpPort: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                >
+                  <option value="587">587 (TLS)</option>
+                  <option value="465">465 (SSL)</option>
+                  <option value="25">25</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Your Email Address</label>
+              <input
+                type="email"
+                value={emailForm.smtpUser}
+                onChange={(e) => setEmailForm({ ...emailForm, smtpUser: e.target.value })}
+                placeholder="treasurer@yourchurch.org"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+              <input
+                type="text"
+                value={emailForm.smtpFromName}
+                onChange={(e) => setEmailForm({ ...emailForm, smtpFromName: e.target.value })}
+                placeholder="First Baptist Church"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1">Shown as the sender name</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {EMAIL_PROVIDERS.find((p) => p.label === selectedProvider)?.passwordLabel ?? "Password"}
+            </label>
+            <div className="relative">
+              <input
+                type={showSmtpPass ? "text" : "password"}
+                value={emailForm.smtpPass}
+                onChange={(e) => setEmailForm({ ...emailForm, smtpPass: e.target.value })}
+                placeholder={org?.smtpConfigured ? "Leave blank to keep existing" : "Enter password"}
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSmtpPass(!showSmtpPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {/* Provider-specific password instructions */}
+            <p className="text-xs text-gray-500 mt-1.5">
+              {EMAIL_PROVIDERS.find((p) => p.label === selectedProvider)?.passwordHelp}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Email Settings"}
+            </button>
+            <button
+              type="button"
+              onClick={handleTestEmail}
+              disabled={testingEmail || !emailForm.smtpHost || !emailForm.smtpUser || (!emailForm.smtpPass && !org?.smtpConfigured)}
+              className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            >
+              {testingEmail ? "Testing..." : "Test Connection"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Subscription Plan & Fund Management - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Subscription Plan */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Subscription Plan
+          </h2>
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl font-bold text-emerald-700">
                 {org?.subscriptionTier === "STARTER" && "Starter"}
                 {org?.subscriptionTier === "GROWTH" && "Growth"}
@@ -262,7 +501,7 @@ export default function Settings() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 mb-4">
               {org?.subscriptionTier === "STARTER" &&
                 "$29/month - All core features for small nonprofits"}
               {org?.subscriptionTier === "GROWTH" &&
@@ -270,74 +509,74 @@ export default function Settings() {
               {org?.subscriptionTier === "PLUS" &&
                 "$99/month - Complete platform with unlimited donors"}
             </p>
+            {org?.subscriptionTier === "STARTER" && (
+              <a
+                href="/app/upgrade"
+                className="inline-block w-full text-center px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+              >
+                Upgrade Plan
+              </a>
+            )}
           </div>
           {org?.subscriptionTier === "STARTER" && (
-            <a
-              href="/app/upgrade"
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-            >
-              Upgrade Plan
-            </a>
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Upgrade to Growth or Plus</strong> to unlock tax letter
+                generation, manage more donors, and get priority support.
+              </p>
+            </div>
           )}
         </div>
-        {org?.subscriptionTier === "STARTER" && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Upgrade to Growth or Plus</strong> to unlock tax letter
-              generation, manage more donors, and get priority support.
-            </p>
-          </div>
-        )}
-      </div>
 
-      {/* Fund Management */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Fund Management
-        </h2>
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={newFundName}
-            onChange={(e) => setNewFundName(e.target.value)}
-            placeholder="New fund name"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFund())}
-          />
-          <button
-            onClick={addFund}
-            className="flex items-center gap-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-          >
-            <Plus className="w-4 h-4" />
-            Add
-          </button>
-        </div>
-        <div className="space-y-2">
-          {funds.map((fund) => (
-            <div
-              key={fund.id}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg ${
-                fund.isActive ? "bg-gray-50" : "bg-gray-100 opacity-50"
-              }`}
+        {/* Fund Management */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Fund Management
+          </h2>
+            <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newFundName}
+              onChange={(e) => setNewFundName(e.target.value)}
+              placeholder="New fund name"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFund())}
+            />
+            <button
+              onClick={addFund}
+              className="flex items-center gap-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
             >
-              <span className="text-sm text-gray-900">
-                {fund.name}
-                {!fund.isActive && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (inactive)
-                  </span>
+              <Plus className="w-4 h-4" />
+              Add
+            </button>
+          </div>
+            <div className="space-y-2">
+            {funds.map((fund) => (
+              <div
+                key={fund.id}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg ${
+                  fund.isActive ? "bg-gray-50" : "bg-gray-100 opacity-50"
+                }`}
+              >
+                <span className="text-sm text-gray-900">
+                  {fund.name}
+                  {!fund.isActive && (
+                    <span className="text-xs text-gray-500 ml-2">
+                      (inactive)
+                    </span>
+                  )}
+                </span>
+                {fund.isActive && (
+                  <button
+                    onClick={() => deleteFund(fund.id)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
-              </span>
-              {fund.isActive && (
-                <button
-                  onClick={() => deleteFund(fund.id)}
-                  className="text-gray-400 hover:text-red-500"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

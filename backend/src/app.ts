@@ -3,9 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 import authRoutes from "./routes/auth";
 import organizationRoutes from "./routes/organization";
@@ -15,7 +12,10 @@ import fundRoutes from "./routes/funds";
 import dashboardRoutes from "./routes/dashboard";
 import reportRoutes from "./routes/reports";
 import taxLetterRoutes from "./routes/tax-letters";
+import stripeRoutes from "./routes/stripe";
 import { apiLimiter, authLimiter } from "./middleware/rateLimiter";
+import { authenticate } from "./middleware/auth";
+import { checkTrialStatus } from "./middleware/trialCheck";
 
 const app = express();
 
@@ -46,19 +46,31 @@ app.use(
   })
 );
 app.use(morgan("dev"));
+
+// Stripe webhook needs raw body - MUST be before express.json()
+app.use(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  stripeRoutes
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", authLimiter, authRoutes); // Strict rate limiting on auth
 app.use("/api", apiLimiter); // General rate limiting on all API routes
-app.use("/api/organization", organizationRoutes);
-app.use("/api/donors", donorRoutes);
-app.use("/api/donations", donationRoutes);
-app.use("/api/funds", fundRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/tax-letters", taxLetterRoutes);
+
+// Apply auth + trial enforcement to protected routes
+// authenticate runs first to set req.user, then checkTrialStatus uses it
+app.use("/api/organization", authenticate, checkTrialStatus, organizationRoutes);
+app.use("/api/donors", authenticate, checkTrialStatus, donorRoutes);
+app.use("/api/donations", authenticate, checkTrialStatus, donationRoutes);
+app.use("/api/funds", authenticate, checkTrialStatus, fundRoutes);
+app.use("/api/dashboard", authenticate, checkTrialStatus, dashboardRoutes);
+app.use("/api/reports", authenticate, checkTrialStatus, reportRoutes);
+app.use("/api/tax-letters", authenticate, checkTrialStatus, taxLetterRoutes);
+app.use("/api/stripe", stripeRoutes); // Stripe routes (webhook already mounted above, no trial check needed)
 
 // Health check
 app.get("/api/health", (_req, res) => {

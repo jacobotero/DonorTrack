@@ -14,6 +14,8 @@ import Reports from "./pages/Reports";
 import TaxLetters from "./pages/TaxLetters";
 import Settings from "./pages/Settings";
 import Upgrade from "./pages/Upgrade";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/upgrade" element={<Upgrade />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="donors" element={<Donors />} />

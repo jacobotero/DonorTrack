@@ -54,22 +54,23 @@ export default function Donors() {
       .then((res) => {
         setDonors(res.data.donors);
         setPagination(res.data.pagination);
-
-        // Extract unique tags from all donors
-        const tags = new Set<string>();
-        res.data.donors.forEach((donor: Donor) => {
-          if (donor.tags) {
-            donor.tags.forEach((tag: string) => tags.add(tag));
-          }
-        });
-        setAvailableTags(Array.from(tags).sort());
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
+  const fetchTags = () => {
+    api
+      .get("/donors/tags")
+      .then((res) => {
+        setAvailableTags(res.data.tags);
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => {
     fetchDonors();
+    fetchTags();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -81,23 +82,7 @@ export default function Donors() {
     setSearch("");
     setDonorTypeFilter("");
     setTagFilter("");
-    // Fetch immediately with no filters by calling API directly
-    setLoading(true);
-    api
-      .get("/donors", { params: { page: "1", limit: "25" } })
-      .then((res) => {
-        setDonors(res.data.donors);
-        setPagination(res.data.pagination);
-        const tags = new Set<string>();
-        res.data.donors.forEach((donor: Donor) => {
-          if (donor.tags) {
-            donor.tags.forEach((tag: string) => tags.add(tag));
-          }
-        });
-        setAvailableTags(Array.from(tags).sort());
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchDonors(1);
   };
 
   const handleAddDonor = async (e: React.FormEvent) => {
@@ -317,7 +302,7 @@ export default function Donors() {
                   <tr key={donor.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <Link
-                        to={`/donors/${donor.id}`}
+                        to={`/app/donors/${donor.id}`}
                         className="text-sm font-medium text-gray-900 hover:text-emerald-600"
                       >
                         {donor.firstName} {donor.lastName}
