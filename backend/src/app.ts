@@ -39,7 +39,18 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      const allowed = [
+        process.env.FRONTEND_URL || "http://localhost:5173",
+        "http://localhost:5173",
+      ];
+      // Allow any Vercel preview/production URLs
+      if (!origin || allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
