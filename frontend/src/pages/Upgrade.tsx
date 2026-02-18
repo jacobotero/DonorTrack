@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CheckCircle, CreditCard, Lock, ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { CheckCircle, CreditCard, Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 
@@ -55,6 +55,7 @@ const plans = [
 export default function Upgrade() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<Plan>("GROWTH");
   const [processing, setProcessing] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState({
@@ -66,6 +67,7 @@ export default function Upgrade() {
 
   const currentPlan = user?.organization?.subscriptionTier || "STARTER";
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
+  const trialExpired = searchParams.get("trial_expired") === "true";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +109,44 @@ export default function Upgrade() {
             </p>
           )}
         </div>
+
+        {/* Trial Expired Banner */}
+        {trialExpired && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-12">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900 mb-2">
+                  Your Free Trial Has Ended
+                </h3>
+                <p className="text-red-800 mb-4">
+                  Your 14-day free trial of DonorTrack has expired. To continue
+                  managing your donors and donations, please upgrade to a paid
+                  plan below.
+                </p>
+                <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                  <h4 className="font-semibold text-red-900 mb-2">
+                    What happens when you upgrade:
+                  </h4>
+                  <ul className="space-y-1 text-sm text-red-800">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      Immediate access to all your data
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      Continue where you left off
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      Unlock tax letter generation (Growth & Plus)
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Plan Selection */}
