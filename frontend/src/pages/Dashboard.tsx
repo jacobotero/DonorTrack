@@ -178,9 +178,6 @@ export default function Dashboard() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   if (loading) {
     return (

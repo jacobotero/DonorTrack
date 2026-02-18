@@ -150,7 +150,7 @@ export default function Reports() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
                   />
                   <Bar dataKey="amount" fill="#059669" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -173,7 +173,7 @@ export default function Reports() {
                     cy="50%"
                     outerRadius={100}
                     label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
+                      `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
                     }
                   >
                     {data.summary.byPaymentMethod.map(
@@ -186,7 +186,7 @@ export default function Reports() {
                     )}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
                   />
                 </PieChart>
               </ResponsiveContainer>
