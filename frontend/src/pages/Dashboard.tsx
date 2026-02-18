@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../lib/api";
-import type { DashboardStats, Donation } from "../types";
+import type { DashboardStats, Donation, Organization } from "../types";
+import TrialBanner from "../components/common/TrialBanner";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -100,6 +101,7 @@ function getDateRange(preset: string): { startDate: string; endDate: string } {
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRangePreset, setDateRangePreset] = useState("this_month");
   const [customStartDate, setCustomStartDate] = useState("");
@@ -127,6 +129,14 @@ export default function Dashboard() {
       .catch(console.error)
       .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    // Fetch organization on mount
+    api
+      .get("/organization")
+      .then((res) => setOrganization(res.data.organization))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -182,6 +192,8 @@ export default function Dashboard() {
 
   return (
     <div>
+      {organization && <TrialBanner organization={organization} />}
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex gap-3">

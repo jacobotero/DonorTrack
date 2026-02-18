@@ -34,6 +34,10 @@ router.post(
 
       const passwordHash = await hashPassword(password);
 
+      // Set trial to end 14 days from now
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
       const user = await prisma.user.create({
         data: {
           email: email.toLowerCase(),
@@ -41,6 +45,7 @@ router.post(
           organization: {
             create: {
               name: organizationName,
+              trialEndsAt,
             },
           },
         },

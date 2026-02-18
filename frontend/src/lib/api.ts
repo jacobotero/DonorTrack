@@ -19,6 +19,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       window.location.href = "/login";
+    } else if (error.response?.status === 402 && error.response?.data?.trialExpired) {
+      // Trial expired - redirect to upgrade page
+      window.location.href = "/app/upgrade?trial_expired=true";
     }
     return Promise.reject(error);
   }
