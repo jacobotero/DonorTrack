@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import prisma from "../prisma";
 import { authenticate } from "../middleware/auth";
-import { Prisma } from "../generated/prisma/client";
+import { Prisma } from "@prisma/client";
 import { stringify } from "csv-stringify/sync";
 import { parse } from "csv-parse/sync";
 import multer from "multer";
