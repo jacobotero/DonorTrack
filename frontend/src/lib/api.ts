@@ -16,7 +16,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url || "";
+    const isAuthRoute = requestUrl.startsWith("/auth/");
+    if (error.response?.status === 401 && !isAuthRoute) {
+      // Only redirect on 401 for protected routes, not login/register failures
       localStorage.removeItem("token");
       window.location.href = "/login";
     } else if (error.response?.status === 402 && error.response?.data?.trialExpired) {
