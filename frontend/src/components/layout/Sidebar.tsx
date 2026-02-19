@@ -34,7 +34,7 @@ export default function Sidebar() {
     <>
       <div className="p-6 border-b border-gray-200">
         <Link to="/" className="flex items-center gap-2 text-xl font-bold text-emerald-700 hover:text-emerald-800">
-          <Heart className="w-5 h-5 text-emerald-500 fill-emerald-500" />
+          <Heart className="w-5 h-5 text-emerald-600" />
           DonorTrack
         </Link>
         {user?.organization && (
