@@ -38,6 +38,36 @@ async function sendVerificationEmail(email: string, token: string) {
   });
 }
 
+async function sendWelcomeEmail(email: string, orgName: string, trialEndsAt: Date | null) {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const appUrl = `${frontendUrl}/app`;
+  const trialLine = trialEndsAt
+    ? `<p style="color:#6b7280;font-size:14px;">Your free trial runs until <strong>${trialEndsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>. No credit card needed until then.</p>`
+    : "";
+
+  await emailService.sendEmail({
+    to: email,
+    subject: "Welcome to DonorTrack! 🎉",
+    text: `Welcome to DonorTrack, ${orgName}!\n\nYour account is verified and ready to go. Start managing your donors and donations at ${appUrl}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
+        <h2 style="color: #059669;">Welcome to DonorTrack!</h2>
+        <p>Hi there — <strong>${orgName}</strong> is all set up and ready to go.</p>
+        <p>Here's what you can do right now:</p>
+        <ul style="padding-left:20px;line-height:2;">
+          <li>Add your donors and their contact info</li>
+          <li>Record donations by fund or campaign</li>
+          <li>Generate IRS-compliant tax letters</li>
+          <li>Export reports for your board</li>
+        </ul>
+        ${trialLine}
+        <a href="${appUrl}" style="display:inline-block;background:#059669;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0;">Go to Dashboard</a>
+        <p style="color:#6b7280;font-size:13px;margin-top:24px;">Thanks for choosing DonorTrack. We're glad to have you.</p>
+      </div>
+    `,
+  });
+}
+
 // POST /api/auth/register
 router.post(
   "/register",
@@ -220,6 +250,14 @@ router.get(
           emailVerificationExpiry: null,
         },
       });
+
+      // Send welcome email now that the address is confirmed
+      const org = await prisma.organization.findFirst({ where: { userId: user.id } });
+      if (org) {
+        sendWelcomeEmail(user.email, org.name, org.trialEndsAt).catch((err) => {
+          console.error("Failed to send welcome email:", err);
+        });
+      }
 
       res.json({ message: "Email verified successfully" });
     } catch (error) {

@@ -57,6 +57,8 @@ model Organization {
   trialEndsAt          DateTime?          @map("trial_ends_at")
   stripeCustomerId     String?            @map("stripe_customer_id") @db.VarChar(255)
   stripeSubscriptionId String?            @map("stripe_subscription_id") @db.VarChar(255)
+  trialReminder3Sent   Boolean            @default(false) @map("trial_reminder_3_sent")
+  trialReminder1Sent   Boolean            @default(false) @map("trial_reminder_1_sent")
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
