@@ -159,10 +159,10 @@ export default function PaymentSuccess() {
           <p className="text-sm text-gray-500 mt-6">
             Questions? Contact us at{" "}
             <a
-              href="mailto:support@donortrack.com"
+              href="mailto:donortrackapp@gmail.com"
               className="text-emerald-600 hover:text-emerald-700"
             >
-              support@donortrack.com
+              donortrackapp@gmail.com
             </a>
           </p>
         </div>
