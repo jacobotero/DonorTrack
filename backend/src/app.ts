@@ -43,6 +43,8 @@ app.use(
       const allowed = [
         process.env.FRONTEND_URL || "http://localhost:5173",
         "http://localhost:5173",
+        "https://donortrackapp.com",
+        "https://www.donortrackapp.com",
       ];
       // Allow any Vercel preview/production URLs
       if (!origin || allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
