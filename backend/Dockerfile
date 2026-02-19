@@ -19,4 +19,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && echo \"UPDATE organizations SET subscription_tier = 'PLUS' WHERE subscription_status = 'TRIALING';\" | npx prisma db execute --stdin && node dist/server.js"]
