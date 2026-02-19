@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, LifeBuoy, CheckCircle, Send, ArrowLeft } from "lucide-react";
-import { useDarkMode } from "../hooks/useDarkMode";
 import { usePageTitle } from "../hooks/usePageTitle";
 import api from "../lib/api";
 
 export default function Contact() {
   usePageTitle("Contact Us");
-  const { isDark } = useDarkMode();
 
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
