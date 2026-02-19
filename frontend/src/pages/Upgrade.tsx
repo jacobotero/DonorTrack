@@ -63,8 +63,10 @@ export default function Upgrade() {
   const [processing, setProcessing] = useState(false);
 
   const subscriptionStatus = user?.organization?.subscriptionStatus;
-  // If canceled, no plan is "current" — all plans should be selectable for resubscribing
-  const currentPlan = subscriptionStatus === "CANCELED" ? null : (user?.organization?.subscriptionTier ?? null);
+  // If canceled or still on trial, no plan is "current" — all plans should be selectable
+  const currentPlan = (subscriptionStatus === "CANCELED" || subscriptionStatus === "TRIALING")
+    ? null
+    : (user?.organization?.subscriptionTier ?? null);
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
   const trialExpired = searchParams.get("trial_expired") === "true";
   const canceled = searchParams.get("canceled") === "true";
