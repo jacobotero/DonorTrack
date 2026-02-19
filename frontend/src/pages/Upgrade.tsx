@@ -102,25 +102,25 @@ export default function Upgrade() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <button
             onClick={() => subscriptionCanceled ? navigate("/") : navigate(-1)}
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Upgrade Your Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 dark:text-gray-400">
             Choose the plan that's right for your organization
           </p>
           {currentPlan && (
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Current plan: <strong>{currentPlan}</strong>
             </p>
           )}
@@ -128,14 +128,14 @@ export default function Upgrade() {
 
         {/* Subscription Canceled Banner */}
         {subscriptionCanceled && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-12">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-12">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-900 mb-2">
+                <h3 className="text-lg font-bold text-red-900 dark:text-red-300 mb-2">
                   Your Subscription Has Been Canceled
                 </h3>
-                <p className="text-red-800 mb-2">
+                <p className="text-red-800 dark:text-red-400 mb-2">
                   Your subscription is no longer active. All your data is safely preserved — select a plan below to resubscribe and regain access instantly.
                 </p>
               </div>
@@ -145,14 +145,14 @@ export default function Upgrade() {
 
         {/* Payment Canceled Banner */}
         {canceled && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-12">
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6 mb-12">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+              <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-amber-900 mb-2">
+                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 mb-2">
                   Payment Canceled
                 </h3>
-                <p className="text-amber-800">
+                <p className="text-amber-800 dark:text-amber-400">
                   Your payment was canceled. No charges were made. Feel free to
                   select a plan below when you're ready to upgrade.
                 </p>
@@ -163,33 +163,33 @@ export default function Upgrade() {
 
         {/* Trial Expired Banner */}
         {trialExpired && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-12">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-12">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-900 mb-2">
+                <h3 className="text-lg font-bold text-red-900 dark:text-red-300 mb-2">
                   Your Free Trial Has Ended
                 </h3>
-                <p className="text-red-800 mb-4">
+                <p className="text-red-800 dark:text-red-400 mb-4">
                   Your 14-day free trial of DonorTrack has expired. To continue
                   managing your donors and donations, please upgrade to a paid
                   plan below.
                 </p>
-                <div className="bg-red-100 border border-red-300 rounded-lg p-4">
-                  <h4 className="font-semibold text-red-900 mb-2">
+                <div className="bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 rounded-lg p-4">
+                  <h4 className="font-semibold text-red-900 dark:text-red-300 mb-2">
                     What happens when you upgrade:
                   </h4>
-                  <ul className="space-y-1 text-sm text-red-800">
+                  <ul className="space-y-1 text-sm text-red-800 dark:text-red-400">
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      <CheckCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                       Immediate access to all your data
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      <CheckCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                       Continue where you left off
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-red-600" />
+                      <CheckCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                       Unlock tax letter generation (Growth & Plus)
                     </li>
                   </ul>
@@ -202,7 +202,7 @@ export default function Upgrade() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Plan Selection */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Select a Plan
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -210,10 +210,10 @@ export default function Upgrade() {
                 <button
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan.id)}
-                  className={`relative bg-white rounded-xl border-2 p-6 text-left transition-all ${
+                  className={`relative bg-white dark:bg-gray-800 rounded-xl border-2 p-6 text-left transition-all ${
                     selectedPlan === plan.id
                       ? "border-emerald-600 shadow-lg"
-                      : "border-gray-200 hover:border-gray-300"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   } ${
                     plan.id === currentPlan
                       ? "opacity-50 cursor-not-allowed"
@@ -232,23 +232,23 @@ export default function Upgrade() {
                     </div>
                   )}
 
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                     {plan.name}
                   </h3>
                   <div className="mb-4">
-                    <span className="text-3xl font-bold text-gray-900">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
                       ${plan.price}
                     </span>
-                    <span className="text-gray-600">/month</span>
+                    <span className="text-gray-600 dark:text-gray-400">/month</span>
                   </div>
-                  <div className="text-sm text-gray-600 mb-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     {plan.donors} donors
                   </div>
                   <ul className="space-y-2">
                     {plan.features.slice(0, 3).map((feature, i) => (
                       <li
                         key={i}
-                        className="flex items-start gap-2 text-sm text-gray-700"
+                        className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                       >
                         <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
@@ -262,25 +262,25 @@ export default function Upgrade() {
 
           {/* Checkout Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                 Selected Plan
               </h2>
 
               {/* Plan Summary */}
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {selectedPlanData?.name} Plan
                   </span>
-                  <span className="text-lg font-bold text-emerald-700">
+                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
                     ${selectedPlanData?.price}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mb-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                   Billed monthly • Cancel anytime
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Payment securely processed by Stripe
                 </p>
               </div>
@@ -295,13 +295,13 @@ export default function Upgrade() {
                 {processing ? "Redirecting..." : "Continue to Checkout"}
               </button>
 
-              <p className="text-xs text-center text-gray-500 mt-4">
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4">
                 You'll enter payment details on the secure Stripe checkout page
               </p>
 
               {/* Trial Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-600 text-center">
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                   <strong>14-day free trial</strong>
                   <br />
                   No charge until trial ends
@@ -312,41 +312,41 @@ export default function Upgrade() {
         </div>
 
         {/* Features Comparison */}
-        <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
             All Plans Include
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                 Secure & Reliable
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 256-bit encryption and daily backups
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                 Cancel Anytime
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 No long-term contracts or commitments
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                 Regular Updates
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 New features and improvements monthly
               </p>
             </div>

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useDarkMode } from "../hooks/useDarkMode";
 import {
   Heart,
   Users,
@@ -12,6 +13,8 @@ import {
   Zap,
   CheckCircle,
   ArrowRight,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 const features = [
@@ -81,32 +84,41 @@ const howItWorks = [
 
 export default function Landing() {
   usePageTitle("");
+  const { isDark, toggleDark } = useDarkMode();
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50">
+      <header className="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <Heart className="w-8 h-8 text-emerald-600" />
-              <span className="text-xl font-bold text-gray-900">DonorTrack</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">DonorTrack</span>
             </div>
             <div className="flex items-center gap-4">
               <a
                 href="#features"
-                className="hidden md:block text-gray-700 hover:text-gray-900 text-sm font-medium"
+                className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
               >
                 Features
               </a>
               <a
                 href="#pricing"
-                className="hidden md:block text-gray-700 hover:text-gray-900 text-sm font-medium"
+                className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
               >
                 Pricing
               </a>
+              <button
+                onClick={toggleDark}
+                className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <Link
                 to="/login"
-                className="text-gray-700 hover:text-gray-900 px-4 py-2 text-sm font-medium"
+                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 text-sm font-medium"
               >
                 Log In
               </Link>
@@ -122,18 +134,18 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-emerald-50 to-white">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-emerald-50 to-white dark:from-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded-full text-sm font-medium mb-8">
             <Zap className="w-4 h-4" />
             Simple donor management for small nonprofits
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Track Donations.
             <br />
             <span className="text-emerald-600">Strengthen Relationships.</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
             DonorTrack is the easiest way for small nonprofits and churches to manage
             donors, track donations, and generate IRS-compliant tax letters—all in one place.
           </p>
@@ -147,25 +159,25 @@ export default function Landing() {
             </Link>
             <a
               href="#features"
-              className="inline-flex items-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-gray-300 transition-colors"
+              className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
             >
               Learn More
             </a>
           </div>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
             No credit card required • Free to start • Cancel anytime
           </p>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Everything You Need
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Built specifically for small nonprofits and churches. Simple, powerful,
               and affordable.
             </p>
@@ -175,15 +187,15 @@ export default function Landing() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="bg-white p-6 rounded-xl border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all"
+                className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg transition-all"
               >
-                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -191,14 +203,14 @@ export default function Landing() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
                 Built for Nonprofits Like Yours
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
                 Stop using spreadsheets and outdated software. DonorTrack gives you
                 professional donor management without the complexity or high cost.
               </p>
@@ -206,7 +218,7 @@ export default function Landing() {
                 {benefits.map((benefit) => (
                   <div key={benefit} className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                    <span className="text-gray-700">{benefit}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{benefit}</span>
                   </div>
                 ))}
               </div>
@@ -238,13 +250,13 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-400">
               Get started in minutes, not hours
             </p>
           </div>
@@ -256,10 +268,10 @@ export default function Landing() {
                   <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                     {item.step}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-gray-600">{item.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{item.description}</p>
                 </div>
                 {index < howItWorks.length - 1 && (
                   <div className="hidden lg:block absolute top-6 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-emerald-600 to-transparent" />
@@ -271,51 +283,51 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Choose the plan that fits your organization. Start small and upgrade as you grow.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Starter Plan */}
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-8 hover:border-emerald-500 transition-all">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
-              <p className="text-gray-600 mb-6">Perfect for small organizations just getting started</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-8 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Starter</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Perfect for small organizations just getting started</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$29</span>
-                <span className="text-gray-600">/month</span>
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$29</span>
+                <span className="text-gray-600 dark:text-gray-400">/month</span>
               </div>
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Up to 100 donors</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Unlimited donations</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>All reports & exports</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>CSV import & batch entry</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Email support</span>
                 </li>
               </ul>
               <Link
                 to="/upgrade"
-                className="block w-full text-center px-6 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                className="block w-full text-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 Start Free Trial
               </Link>
@@ -363,38 +375,38 @@ export default function Landing() {
             </div>
 
             {/* Plus Plan */}
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-8 hover:border-emerald-500 transition-all">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Plus</h3>
-              <p className="text-gray-600 mb-6">For established organizations with large donor communities</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-8 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Plus</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">For established organizations with large donor communities</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$99</span>
-                <span className="text-gray-600">/month</span>
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$99</span>
+                <span className="text-gray-600 dark:text-gray-400">/month</span>
               </div>
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Unlimited donors</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Unlimited donations</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>All reports & exports</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Tax letter generation</span>
                 </li>
-                <li className="flex items-center gap-2 text-gray-700">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <span>Priority support</span>
                 </li>
               </ul>
               <Link
                 to="/upgrade"
-                className="block w-full text-center px-6 py-3 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                className="block w-full text-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 Start Free Trial
               </Link>
@@ -402,10 +414,10 @@ export default function Landing() {
           </div>
 
           <div className="text-center mt-12">
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
               All plans include a <strong>14-day free trial</strong> • No credit card required
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-500">
               Cancel anytime • Annual plans save 20%
             </p>
           </div>
