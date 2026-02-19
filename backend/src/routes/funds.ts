@@ -105,6 +105,37 @@ router.put(
   }
 );
 
+// DELETE /api/funds/:id/permanent (hard delete)
+router.delete(
+  "/:id/permanent",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const orgId = await getOrgId(req.user!.userId);
+      if (!orgId) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      const existing = await prisma.fund.findFirst({
+        where: { id: req.params.id, organizationId: orgId },
+      });
+
+      if (!existing) {
+        res.status(404).json({ error: "Fund not found" });
+        return;
+      }
+
+      await prisma.fund.delete({ where: { id: req.params.id } });
+
+      res.json({ message: "Fund permanently deleted" });
+    } catch (error) {
+      console.error("Permanent delete fund error:", error);
+      res.status(500).json({ error: "Failed to permanently delete fund" });
+    }
+  }
+);
+
 // DELETE /api/funds/:id (deactivate)
 router.delete(
   "/:id",

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
-import { Plus, X, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Plus, X, Mail, CheckCircle, Eye, EyeOff, Trash2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
 
@@ -72,6 +72,7 @@ export default function Settings() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmDeleteFund, setConfirmDeleteFund] = useState<string | null>(null);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -187,6 +188,17 @@ export default function Settings() {
       toast.success("Fund deactivated");
     } catch {
       toast.error("Failed to deactivate fund");
+    }
+  };
+
+  const permanentDeleteFund = async (id: string) => {
+    try {
+      await api.delete(`/funds/${id}/permanent`);
+      setFunds(funds.filter((f) => f.id !== id));
+      setConfirmDeleteFund(null);
+      toast.success("Fund permanently deleted");
+    } catch {
+      toast.error("Failed to permanently delete fund");
     }
   };
 
@@ -615,27 +627,54 @@ export default function Settings() {
           </div>
             <div className="space-y-2">
             {funds.map((fund) => (
-              <div
-                key={fund.id}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg ${
-                  fund.isActive ? "bg-gray-50" : "bg-gray-100 opacity-50"
-                }`}
-              >
-                <span className="text-sm text-gray-900">
-                  {fund.name}
-                  {!fund.isActive && (
-                    <span className="text-xs text-gray-500 ml-2">
-                      (inactive)
-                    </span>
+              <div key={fund.id}>
+                <div
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg ${
+                    fund.isActive ? "bg-gray-50" : "bg-gray-100 opacity-60"
+                  }`}
+                >
+                  <span className="text-sm text-gray-900">
+                    {fund.name}
+                    {!fund.isActive && (
+                      <span className="text-xs text-gray-500 ml-2">(inactive)</span>
+                    )}
+                  </span>
+                  {fund.isActive ? (
+                    <button
+                      onClick={() => deleteFund(fund.id)}
+                      className="text-gray-400 hover:text-red-500"
+                      title="Deactivate"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteFund(fund.id)}
+                      className="text-gray-400 hover:text-red-500"
+                      title="Permanently delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   )}
-                </span>
-                {fund.isActive && (
-                  <button
-                    onClick={() => deleteFund(fund.id)}
-                    className="text-gray-400 hover:text-red-500"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                </div>
+                {confirmDeleteFund === fund.id && (
+                  <div className="mt-1 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between gap-2">
+                    <span className="text-xs text-red-700">Permanently delete "{fund.name}"?</span>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => permanentDeleteFund(fund.id)}
+                        className="px-2 py-1 text-xs font-medium bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteFund(null)}
+                        className="px-2 py-1 text-xs font-medium border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
