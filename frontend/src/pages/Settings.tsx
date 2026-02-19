@@ -539,22 +539,12 @@ export default function Settings() {
           </p>
 
           <div className="space-y-2">
-            {org?.subscriptionTier === "STARTER" && (
-              <button
-                onClick={() => navigate("/app/upgrade")}
-                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-              >
-                Upgrade Plan
-              </button>
-            )}
-            {org?.subscriptionTier === "GROWTH" && (
-              <button
-                onClick={() => navigate("/app/upgrade")}
-                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-              >
-                Upgrade to Plus
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/app/upgrade")}
+              className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+            >
+              Change Subscription Plan
+            </button>
             {(org?.subscriptionTier === "STARTER" || org?.subscriptionTier === "GROWTH" || org?.subscriptionTier === "PLUS") && (
               <>
                 {!showCancelConfirm ? (
