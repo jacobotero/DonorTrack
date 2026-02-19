@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { Plus, X, Upload, Download } from "lucide-react";
+import { Plus, X, Upload, Download, Pencil } from "lucide-react";
 import api from "../lib/api";
 import type { Donation, Donor, Fund, Pagination } from "../types";
 import toast from "react-hot-toast";
@@ -42,6 +42,19 @@ export default function Donations() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [batchMode, setBatchMode] = useState(false);
   const [batchCount, setBatchCount] = useState(0);
+
+  // Edit modal state
+  const [editingDonation, setEditingDonation] = useState<Donation | null>(null);
+  const [editForm, setEditForm] = useState({
+    donorId: "",
+    amount: "",
+    donationDate: "",
+    paymentMethod: "",
+    checkNumber: "",
+    fund: "",
+    campaign: "",
+    notes: "",
+  });
 
   // Filters
   const [startDate, setStartDate] = useState("");
@@ -140,6 +153,33 @@ export default function Donations() {
       fetchDonations();
     } catch {
       toast.error("Failed to delete");
+    }
+  };
+
+  const openEdit = (donation: Donation) => {
+    setEditingDonation(donation);
+    setEditForm({
+      donorId: donation.donorId,
+      amount: String(donation.amount),
+      donationDate: donation.donationDate.split("T")[0],
+      paymentMethod: donation.paymentMethod || "",
+      checkNumber: donation.checkNumber || "",
+      fund: donation.fund || "",
+      campaign: donation.campaign || "",
+      notes: donation.notes || "",
+    });
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDonation) return;
+    try {
+      await api.put(`/donations/${editingDonation.id}`, editForm);
+      toast.success("Donation updated");
+      setEditingDonation(null);
+      fetchDonations();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to update donation");
     }
   };
 
@@ -324,12 +364,21 @@ export default function Donations() {
                       {formatCurrency(Number(donation.amount))}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDelete(donation.id)}
-                        className="text-xs text-red-500 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => openEdit(donation)}
+                          className="text-gray-400 hover:text-emerald-600"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(donation.id)}
+                          className="text-xs text-red-500 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -367,6 +416,135 @@ export default function Donations() {
           </>
         )}
       </div>
+
+      {/* Edit Donation Modal */}
+      {editingDonation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Edit Donation</h2>
+              <button type="button" onClick={() => setEditingDonation(null)}>
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSave} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Donor *</label>
+                <select
+                  required
+                  value={editForm.donorId}
+                  onChange={(e) => setEditForm({ ...editForm, donorId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                >
+                  <option value="">Select a donor</option>
+                  {donors.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.firstName} {d.lastName}{d.email ? ` (${d.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={editForm.amount}
+                    onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={editForm.donationDate}
+                    onChange={(e) => setEditForm({ ...editForm, donationDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
+                  <select
+                    value={editForm.paymentMethod}
+                    onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  >
+                    <option value="">Select</option>
+                    {PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Check number</label>
+                  <input
+                    type="text"
+                    value={editForm.checkNumber}
+                    onChange={(e) => setEditForm({ ...editForm, checkNumber: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fund</label>
+                  <select
+                    value={editForm.fund}
+                    onChange={(e) => setEditForm({ ...editForm, fund: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  >
+                    <option value="">Select fund</option>
+                    {funds.filter((f) => f.isActive).map((f) => (
+                      <option key={f.id} value={f.name}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign</label>
+                  <input
+                    type="text"
+                    value={editForm.campaign}
+                    onChange={(e) => setEditForm({ ...editForm, campaign: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingDonation(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Donation Modal */}
       {showAddModal && (
