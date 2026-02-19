@@ -86,8 +86,14 @@ router.post(
       }
 
       const passwordHash = await hashPassword(password);
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+      // If this email has previously used a trial, don't grant a new one
+      const priorTrial = await prisma.trialUsed.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+      const trialEndsAt = priorTrial
+        ? new Date(0) // already used — immediately expired
+        : (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d; })();
 
       const verificationToken = generateVerificationToken();
       const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -113,6 +119,11 @@ router.post(
             { organizationId: user.organization.id, name: "Missions" },
           ],
         });
+      }
+
+      // Record that this email has used a trial (only on first registration)
+      if (!priorTrial) {
+        await prisma.trialUsed.create({ data: { email: email.toLowerCase() } });
       }
 
       // Non-blocking — registration succeeds even if email fails

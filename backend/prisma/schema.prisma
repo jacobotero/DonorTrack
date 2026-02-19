@@ -142,6 +142,14 @@ model Fund {
   @@map("funds")
 }
 
+model TrialUsed {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("trial_used")
+}
+
 model TaxLetter {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
