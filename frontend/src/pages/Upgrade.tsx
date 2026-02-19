@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
+import { usePageTitle } from "../hooks/usePageTitle";
 import api from "../lib/api";
 
 type Plan = "STARTER" | "GROWTH" | "PLUS";
@@ -54,6 +55,7 @@ const plans = [
 ];
 
 export default function Upgrade() {
+  usePageTitle("Upgrade Plan");
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();

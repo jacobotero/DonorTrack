@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 import {
   Heart,
   Users,
@@ -79,6 +80,7 @@ const howItWorks = [
 ];
 
 export default function Landing() {
+  usePageTitle("");
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}

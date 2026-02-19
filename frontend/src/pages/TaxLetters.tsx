@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePageTitle } from "../hooks/usePageTitle";
 import {
   FileText,
   Download,
@@ -29,6 +30,7 @@ function formatDate(dateString: string) {
 }
 
 export default function TaxLetters() {
+  usePageTitle("Tax Letters");
   const [letters, setLetters] = useState<TaxLetter[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [organization, setOrganization] = useState<Organization | null>(null);

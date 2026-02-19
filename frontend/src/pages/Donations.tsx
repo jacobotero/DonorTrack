@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { Plus, X, Upload, Download } from "lucide-react";
 import api from "../lib/api";
 import type { Donation, Donor, Fund, Pagination } from "../types";
@@ -29,6 +30,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function Donations() {
+  usePageTitle("Donations");
   const [searchParams, setSearchParams] = useSearchParams();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);

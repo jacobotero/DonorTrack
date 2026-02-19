@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { usePageTitle } from "../hooks/usePageTitle";
 import api from "../lib/api";
 
 export default function VerifyEmailPending() {
+  usePageTitle("Check Your Email");
   const { user, logout } = useAuth();
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");

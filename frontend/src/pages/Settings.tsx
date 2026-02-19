@@ -5,6 +5,7 @@ import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
 import { Plus, X, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const EMAIL_PROVIDERS = [
   {
@@ -57,6 +58,7 @@ function detectProvider(host: string) {
 }
 
 export default function Settings() {
+  usePageTitle("Settings");
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [org, setOrg] = useState<Organization | null>(null);

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { Plus, Search, X, Upload, Download } from "lucide-react";
 import api from "../lib/api";
 import type { Donor, Pagination } from "../types";
@@ -15,6 +16,7 @@ function formatCurrency(amount: number) {
 const DONOR_TYPES = ["Individual", "Family", "Business", "Foundation"];
 
 export default function Donors() {
+  usePageTitle("Donors");
   const [searchParams, setSearchParams] = useSearchParams();
   const [donors, setDonors] = useState<Donor[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);

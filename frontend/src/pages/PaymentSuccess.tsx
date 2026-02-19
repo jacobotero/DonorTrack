@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, ArrowRight, Loader } from "lucide-react";
 import api from "../lib/api";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function PaymentSuccess() {
+  usePageTitle("Payment Successful");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);

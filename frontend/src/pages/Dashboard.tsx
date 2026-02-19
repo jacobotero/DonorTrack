@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 import {
   Users,
   DollarSign,
@@ -99,6 +100,7 @@ function getDateRange(preset: string): { startDate: string; endDate: string } {
 }
 
 export default function Dashboard() {
+  usePageTitle("Dashboard");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const [organization, setOrganization] = useState<Organization | null>(null);

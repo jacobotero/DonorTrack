@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { ArrowLeft, Edit2, Trash2, Plus } from "lucide-react";
 import api from "../lib/api";
 import type { Donor, Donation } from "../types";
@@ -21,6 +22,7 @@ function formatDate(dateString: string) {
 }
 
 export default function DonorDetail() {
+  usePageTitle("Donor Details");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [donor, setDonor] = useState<Donor & { donations?: Donation[] } | null>(null);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageTitle } from "../hooks/usePageTitle";
 import {
   BarChart,
   Bar,
@@ -33,6 +34,7 @@ const COLORS = [
 type ReportType = "summary" | "funds" | "top-donors";
 
 export default function Reports() {
+  usePageTitle("Reports");
   const [reportType, setReportType] = useState<ReportType>("summary");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
