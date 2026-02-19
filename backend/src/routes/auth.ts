@@ -12,6 +12,7 @@ import {
 } from "../validators/auth";
 import { authenticate } from "../middleware/auth";
 import { emailService } from "../utils/email";
+import { stripe } from "../config/stripe";
 
 const router = Router();
 
@@ -263,6 +264,44 @@ router.post(
     } catch (error) {
       console.error("Resend verification error:", error);
       res.status(500).json({ error: "Failed to resend verification email" });
+    }
+  }
+);
+
+// DELETE /api/auth/account
+router.delete(
+  "/account",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        include: { organization: true },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      // Cancel active Stripe subscription if exists
+      if (user.organization?.stripeSubscriptionId) {
+        try {
+          await stripe.subscriptions.cancel(user.organization.stripeSubscriptionId);
+        } catch (err) {
+          console.error("Failed to cancel Stripe subscription during account deletion:", err);
+          // Continue with deletion even if Stripe cancel fails
+        }
+      }
+
+      // Delete user — cascade deletes organization, donors, donations, funds, tax letters
+      await prisma.user.delete({ where: { id: user.id } });
+
+      console.log(`✅ Account deleted for user ${user.id}`);
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ error: "Failed to delete account" });
     }
   }
 );

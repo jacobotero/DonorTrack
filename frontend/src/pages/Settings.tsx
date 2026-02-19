@@ -4,6 +4,7 @@ import api from "../lib/api";
 import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
 import { Plus, X, Mail, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const EMAIL_PROVIDERS = [
   {
@@ -57,6 +58,7 @@ function detectProvider(host: string) {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [org, setOrg] = useState<Organization | null>(null);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,9 @@ export default function Settings() {
   const [selectedProvider, setSelectedProvider] = useState("Gmail");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const [emailForm, setEmailForm] = useState({
     smtpHost: "",
@@ -189,11 +194,24 @@ export default function Settings() {
       await api.post("/stripe/cancel-subscription");
       setOrg((prev) => prev ? { ...prev, subscriptionTier: "STARTER" } : prev);
       setShowCancelConfirm(false);
-      toast.success("Subscription canceled. You've been moved to the Starter plan.");
+      toast.success("Subscription canceled. Your data is saved — you can resubscribe anytime.");
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to cancel subscription");
     } finally {
       setCanceling(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true);
+    try {
+      await api.delete("/auth/account");
+      logout();
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to delete account");
+      setDeleting(false);
     }
   };
 
@@ -548,7 +566,7 @@ export default function Settings() {
                   <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                     <p className="text-sm text-red-800 font-medium mb-1">Are you sure?</p>
                     <p className="text-xs text-red-700 mb-3">
-                      Your subscription will be canceled immediately and you'll be moved to the Starter plan (100 donor limit).
+                      Billing stops immediately and you'll move to the Starter plan (100 donor limit). All your data is preserved — you can resubscribe anytime.
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -631,6 +649,56 @@ export default function Settings() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-white rounded-xl border border-red-200 p-6 mt-6">
+        <h2 className="text-lg font-semibold text-red-700 mb-1">Danger Zone</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Permanently delete your account and all data. This cannot be undone.
+        </p>
+
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
+          >
+            Delete Account
+          </button>
+        ) : (
+          <div className="border border-red-300 rounded-lg p-4 bg-red-50 max-w-md">
+            <p className="text-sm font-medium text-red-800 mb-1">This will permanently delete:</p>
+            <ul className="text-xs text-red-700 mb-3 list-disc list-inside space-y-0.5">
+              <li>Your account and login</li>
+              <li>All donors and donation records</li>
+              <li>All reports, funds, and tax letters</li>
+              <li>Any active Stripe subscription</li>
+            </ul>
+            <p className="text-xs text-red-700 mb-3 font-medium">Type <strong>DELETE</strong> to confirm:</p>
+            <input
+              type="text"
+              value={deleteInput}
+              onChange={(e) => setDeleteInput(e.target.value)}
+              placeholder="DELETE"
+              className="w-full px-3 py-2 border border-red-300 rounded-lg text-sm mb-3 outline-none focus:ring-2 focus:ring-red-400"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteInput !== "DELETE" || deleting}
+                className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? "Deleting..." : "Permanently delete"}
+              </button>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteInput(""); }}
+                className="flex-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
