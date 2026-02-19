@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
@@ -30,6 +30,12 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800">
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
+          </Link>
+        </div>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-emerald-700">DonorTrack</h1>
           <p className="text-gray-500 mt-2">
