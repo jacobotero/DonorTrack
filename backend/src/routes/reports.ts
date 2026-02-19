@@ -18,8 +18,14 @@ function parseDateRange(startDate?: string, endDate?: string) {
   const where: any = {};
   if (startDate || endDate) {
     where.donationDate = {};
-    if (startDate) where.donationDate.gte = new Date(startDate);
-    if (endDate) where.donationDate.lte = new Date(endDate);
+    if (startDate) {
+      const sd = new Date(startDate);
+      if (!isNaN(sd.getTime())) where.donationDate.gte = sd;
+    }
+    if (endDate) {
+      const ed = new Date(endDate);
+      if (!isNaN(ed.getTime())) where.donationDate.lte = ed;
+    }
   }
   return where;
 }

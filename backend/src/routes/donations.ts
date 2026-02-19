@@ -8,8 +8,8 @@ import multer from "multer";
 
 const router = Router();
 
-// Configure multer for CSV uploads
-const upload = multer({ storage: multer.memoryStorage() });
+// Configure multer for CSV uploads (5MB limit)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 async function getOrgId(userId: string): Promise<string | null> {
   const org = await prisma.organization.findFirst({
@@ -54,8 +54,14 @@ router.get(
 
       if (startDate || endDate) {
         where.donationDate = {};
-        if (startDate) where.donationDate.gte = new Date(startDate as string);
-        if (endDate) where.donationDate.lte = new Date(endDate as string);
+        if (startDate) {
+          const sd = new Date(startDate as string);
+          if (!isNaN(sd.getTime())) where.donationDate.gte = sd;
+        }
+        if (endDate) {
+          const ed = new Date(endDate as string);
+          if (!isNaN(ed.getTime())) where.donationDate.lte = ed;
+        }
       }
 
       const [donations, total] = await Promise.all([
@@ -432,6 +438,18 @@ router.put(
         return;
       }
 
+      // If donorId is being changed, verify the new donor belongs to this org
+      if (req.body.donorId && req.body.donorId !== existing.donorId) {
+        const donorBelongsToOrg = await prisma.donor.findFirst({
+          where: { id: req.body.donorId, organizationId: orgId },
+          select: { id: true },
+        });
+        if (!donorBelongsToOrg) {
+          res.status(400).json({ error: "Donor not found" });
+          return;
+        }
+      }
+
       // Whitelist allowed fields to prevent mass assignment
       const allowedFields: any = {
         amount: req.body.amount,
@@ -439,9 +457,9 @@ router.put(
         donationDate: req.body.donationDate,
         paymentMethod: req.body.paymentMethod,
         checkNumber: req.body.checkNumber,
-        fund: req.body.fund,
-        campaign: req.body.campaign,
-        notes: req.body.notes,
+        fund: req.body.fund || null,
+        campaign: req.body.campaign || null,
+        notes: req.body.notes || null,
       };
 
       // Validate amount

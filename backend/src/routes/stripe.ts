@@ -98,11 +98,11 @@ router.post(
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as any;
 
-        // Update organization subscription
-        const organizationId = session.metadata.organizationId;
-        const plan = session.metadata.plan;
+        const organizationId = session.metadata?.organizationId;
+        const plan = session.metadata?.plan;
+        const validPlans = ["STARTER", "GROWTH", "PLUS"];
 
-        if (organizationId && plan) {
+        if (organizationId && plan && validPlans.includes(plan)) {
           await prisma.organization.update({
             where: { id: organizationId },
             data: {
@@ -114,17 +114,26 @@ router.post(
             },
           });
 
-          console.log(
-            `✅ Upgraded organization ${organizationId} to ${plan} plan`
-          );
+          console.log(`✅ Upgraded organization ${organizationId} to ${plan} plan`);
+        } else {
+          console.error("Webhook: missing or invalid metadata on checkout.session.completed", { organizationId, plan });
         }
       }
 
-      // Handle subscription cancellation
+      // Handle subscription canceled by Stripe (e.g. payment failure)
       if (event.type === "customer.subscription.deleted") {
         const subscription = event.data.object as any;
-        // Handle subscription cancellation if needed
-        console.log("Subscription canceled:", subscription.id);
+        const org = await prisma.organization.findFirst({
+          where: { stripeSubscriptionId: subscription.id },
+          select: { id: true },
+        });
+        if (org) {
+          await prisma.organization.update({
+            where: { id: org.id },
+            data: { subscriptionStatus: "CANCELED", stripeSubscriptionId: null },
+          });
+          console.log(`✅ Marked organization ${org.id} as CANCELED via Stripe webhook`);
+        }
       }
 
       res.json({ received: true });

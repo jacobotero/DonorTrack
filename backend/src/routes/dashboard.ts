@@ -25,10 +25,12 @@ router.get(
       const { startDate, endDate } = req.query;
 
       if (startDate && typeof startDate === "string") {
-        dateFilter.gte = new Date(startDate);
+        const sd = new Date(startDate);
+        if (!isNaN(sd.getTime())) dateFilter.gte = sd;
       }
       if (endDate && typeof endDate === "string") {
-        dateFilter.lte = new Date(endDate);
+        const ed = new Date(endDate);
+        if (!isNaN(ed.getTime())) dateFilter.lte = ed;
       }
 
       const filteredWhere = {

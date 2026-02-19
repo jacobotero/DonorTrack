@@ -95,7 +95,7 @@ export default function Donations() {
   useEffect(() => {
     fetchDonations();
     // Load donors and funds for the add form
-    api.get("/donors", { params: { limit: "100" } }).then((res) => setDonors(res.data.donors));
+    api.get("/donors", { params: { all: "true" } }).then((res) => setDonors(res.data.donors));
     api.get("/funds").then((res) => setFunds(res.data.funds));
   }, []);
 

@@ -88,7 +88,6 @@ router.post(
       // Non-blocking — registration succeeds even if email fails
       sendVerificationEmail(user.email, verificationToken).catch((err) => {
         console.error("Failed to send verification email:", err);
-        console.log(`[DEV] Verify at: ${process.env.FRONTEND_URL || "http://localhost:5173"}/verify-email?token=${verificationToken}`);
       });
 
       const token = generateToken({ userId: user.id, email: user.email });

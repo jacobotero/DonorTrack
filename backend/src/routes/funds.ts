@@ -92,9 +92,15 @@ router.put(
         return;
       }
 
+      const { name, description, isActive } = req.body;
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+      if (isActive !== undefined) updateData.isActive = Boolean(isActive);
+
       const fund = await prisma.fund.update({
         where: { id: req.params.id },
-        data: req.body,
+        data: updateData,
       });
 
       res.json({ fund });

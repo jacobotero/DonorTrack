@@ -59,6 +59,6 @@ export const checkTrialStatus = async (
     next();
   } catch (error) {
     console.error("Trial check error:", error);
-    next(); // Don't block on error
+    res.status(500).json({ error: "Failed to verify subscription status" });
   }
 };

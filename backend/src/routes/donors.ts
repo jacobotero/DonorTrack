@@ -8,8 +8,8 @@ import multer from "multer";
 
 const router = Router();
 
-// Configure multer for CSV uploads
-const upload = multer({ storage: multer.memoryStorage() });
+// Configure multer for CSV uploads (5MB limit)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 async function getOrgId(userId: string): Promise<string | null> {
   const org = await prisma.organization.findFirst({
@@ -95,9 +95,9 @@ router.get(
       } = req.query;
 
       const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-      // Allow fetching all donors if all=true, otherwise cap at 100
+      // Allow fetching all donors if all=true (capped at 10,000), otherwise cap at 100
       const limitNum = all === "true"
-        ? 999999
+        ? 10000
         : Math.min(100, Math.max(1, parseInt(limit as string, 10) || 25));
       const skip = (pageNum - 1) * limitNum;
 

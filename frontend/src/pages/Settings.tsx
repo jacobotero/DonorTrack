@@ -134,8 +134,8 @@ export default function Settings() {
     try {
       const res = await api.put("/organization", form);
       setOrg(res.data.organization);
-      await refreshUser();
       toast.success("Organization updated");
+      refreshUser().catch(() => {}); // non-blocking sidebar refresh
     } catch {
       toast.error("Failed to save");
     } finally {
