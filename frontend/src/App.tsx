@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Upgrade from "./pages/Upgrade";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmailPending from "./pages/VerifyEmailPending";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function App() {
             <Route path="/upgrade" element={<Upgrade />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="donors" element={<Donors />} />
