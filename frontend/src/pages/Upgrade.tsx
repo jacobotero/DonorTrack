@@ -60,7 +60,9 @@ export default function Upgrade() {
   const [selectedPlan, setSelectedPlan] = useState<Plan>("GROWTH");
   const [processing, setProcessing] = useState(false);
 
-  const currentPlan = user?.organization?.subscriptionTier || "STARTER";
+  const subscriptionStatus = user?.organization?.subscriptionStatus;
+  // If canceled, no plan is "current" — all plans should be selectable for resubscribing
+  const currentPlan = subscriptionStatus === "CANCELED" ? null : (user?.organization?.subscriptionTier ?? null);
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
   const trialExpired = searchParams.get("trial_expired") === "true";
   const canceled = searchParams.get("canceled") === "true";

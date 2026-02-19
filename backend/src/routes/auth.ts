@@ -101,7 +101,7 @@ router.post(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name }
+            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus }
             : null,
         },
       });
@@ -145,7 +145,7 @@ router.post(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name }
+            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus }
             : null,
         },
       });
@@ -178,7 +178,7 @@ router.get(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name }
+            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus }
             : null,
         },
       });
