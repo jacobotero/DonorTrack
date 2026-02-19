@@ -64,6 +64,7 @@ export default function Settings() {
   const { logout, refreshUser } = useAuth();
   const { isDark, toggleDark } = useDarkMode();
   const [org, setOrg] = useState<Organization | null>(null);
+  const [trialTimeLeft, setTrialTimeLeft] = useState<string | null>(null);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,6 +130,20 @@ export default function Settings() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!org?.trialEndsAt || org.subscriptionStatus !== "TRIALING") return;
+    const calc = () => {
+      const diff = new Date(org.trialEndsAt!).getTime() - Date.now();
+      if (diff <= 0) { setTrialTimeLeft(null); return; }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      setTrialTimeLeft(days > 0 ? `${days} day${days !== 1 ? "s" : ""}, ${hours} hour${hours !== 1 ? "s" : ""}` : `${hours} hour${hours !== 1 ? "s" : ""}`);
+    };
+    calc();
+    const id = setInterval(calc, 60 * 1000);
+    return () => clearInterval(id);
+  }, [org]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -513,7 +528,7 @@ export default function Settings() {
             )}
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {org?.subscriptionStatus === "TRIALING" && "14-day free trial · Full access to all features"}
+            {org?.subscriptionStatus === "TRIALING" && (trialTimeLeft ? `${trialTimeLeft} remaining · Full access to all features` : "Full access to all features")}
             {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && "$29/month · All core features for small nonprofits"}
             {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && "$59/month · Advanced features including tax letter generation"}
             {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && "$99/month · Complete platform with unlimited donors"}
