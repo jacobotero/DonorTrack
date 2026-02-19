@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -32,7 +32,7 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-emerald-700">DonorTrack</h1>
+        <Link to="/" className="text-xl font-bold text-emerald-700 hover:text-emerald-800">DonorTrack</Link>
         {user?.organization && (
           <p className="text-sm text-gray-500 mt-1 truncate">
             {user.organization.name}
