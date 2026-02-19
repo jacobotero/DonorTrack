@@ -103,7 +103,7 @@ export default function Upgrade() {
         {/* Header */}
         <div className="text-center mb-12">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => subscriptionCanceled ? navigate("/") : navigate(-1)}
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
