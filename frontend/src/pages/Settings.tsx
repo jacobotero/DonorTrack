@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
-import { Plus, X, Mail, CheckCircle, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Plus, X, Mail, CheckCircle, Eye, EyeOff, Trash2, RotateCcw } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
 
@@ -188,6 +188,16 @@ export default function Settings() {
       toast.success("Fund deactivated");
     } catch {
       toast.error("Failed to deactivate fund");
+    }
+  };
+
+  const reactivateFund = async (id: string) => {
+    try {
+      await api.put(`/funds/${id}`, { isActive: true });
+      setFunds(funds.map((f) => (f.id === id ? { ...f, isActive: true } : f)));
+      toast.success("Fund reactivated");
+    } catch {
+      toast.error("Failed to reactivate fund");
     }
   };
 
@@ -648,13 +658,22 @@ export default function Settings() {
                       <X className="w-4 h-4" />
                     </button>
                   ) : (
-                    <button
-                      onClick={() => setConfirmDeleteFund(fund.id)}
-                      className="text-gray-400 hover:text-red-500"
-                      title="Permanently delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => reactivateFund(fund.id)}
+                        className="text-gray-400 hover:text-emerald-600"
+                        title="Reactivate"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteFund(fund.id)}
+                        className="text-gray-400 hover:text-red-500"
+                        title="Permanently delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
                 {confirmDeleteFund === fund.id && (
