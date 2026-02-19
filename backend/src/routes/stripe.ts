@@ -143,7 +143,7 @@ router.post(
     try {
       const org = await prisma.organization.findFirst({
         where: { userId: req.user!.userId },
-        select: { id: true, stripeSubscriptionId: true, subscriptionTier: true },
+        select: { id: true, stripeSubscriptionId: true, subscriptionTier: true, subscriptionStatus: true },
       });
 
       if (!org) {
@@ -151,8 +151,8 @@ router.post(
         return;
       }
 
-      if (org.subscriptionTier === "STARTER") {
-        res.status(400).json({ error: "No active subscription to cancel" });
+      if (org.subscriptionStatus === "CANCELED") {
+        res.status(400).json({ error: "Subscription is already canceled" });
         return;
       }
 

@@ -553,7 +553,7 @@ export default function Settings() {
                 Upgrade to Plus
               </button>
             )}
-            {(org?.subscriptionTier === "GROWTH" || org?.subscriptionTier === "PLUS") && (
+            {(org?.subscriptionTier === "STARTER" || org?.subscriptionTier === "GROWTH" || org?.subscriptionTier === "PLUS") && (
               <>
                 {!showCancelConfirm ? (
                   <button
