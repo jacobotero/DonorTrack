@@ -107,7 +107,9 @@ router.post(
             where: { id: organizationId },
             data: {
               subscriptionTier: plan as "STARTER" | "GROWTH" | "PLUS",
-              trialEndsAt: null, // Clear trial end date on upgrade
+              trialEndsAt: null,
+              stripeCustomerId: session.customer as string || null,
+              stripeSubscriptionId: session.subscription as string || null,
             },
           });
 
@@ -128,6 +130,48 @@ router.post(
     } catch (err: any) {
       console.error("Webhook error:", err.message);
       res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  }
+);
+
+// POST /api/stripe/cancel-subscription
+router.post(
+  "/cancel-subscription",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const org = await prisma.organization.findFirst({
+        where: { userId: req.user!.userId },
+        select: { id: true, stripeSubscriptionId: true, subscriptionTier: true },
+      });
+
+      if (!org) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+
+      if (org.subscriptionTier === "STARTER") {
+        res.status(400).json({ error: "No active subscription to cancel" });
+        return;
+      }
+
+      if (org.stripeSubscriptionId) {
+        await stripe.subscriptions.cancel(org.stripeSubscriptionId);
+      }
+
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: {
+          subscriptionTier: "STARTER",
+          stripeSubscriptionId: null,
+        },
+      });
+
+      console.log(`✅ Canceled subscription for organization ${org.id}`);
+      res.json({ message: "Subscription canceled successfully" });
+    } catch (error) {
+      console.error("Cancel subscription error:", error);
+      res.status(500).json({ error: "Failed to cancel subscription" });
     }
   }
 );

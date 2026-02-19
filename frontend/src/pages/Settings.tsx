@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import type { Organization, Fund } from "../types";
 import toast from "react-hot-toast";
@@ -55,6 +56,7 @@ function detectProvider(host: string) {
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [org, setOrg] = useState<Organization | null>(null);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,8 @@ export default function Settings() {
   const [testingEmail, setTestingEmail] = useState(false);
   const [showSmtpPass, setShowSmtpPass] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("Gmail");
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   const [emailForm, setEmailForm] = useState({
     smtpHost: "",
@@ -176,6 +180,20 @@ export default function Settings() {
       toast.success("Fund deactivated");
     } catch {
       toast.error("Failed to deactivate fund");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCanceling(true);
+    try {
+      await api.post("/stripe/cancel-subscription");
+      setOrg((prev) => prev ? { ...prev, subscriptionTier: "STARTER" } : prev);
+      setShowCancelConfirm(false);
+      toast.success("Subscription canceled. You've been moved to the Starter plan.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to cancel subscription");
+    } finally {
+      setCanceling(false);
     }
   };
 
@@ -478,48 +496,83 @@ export default function Settings() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Subscription Plan
           </h2>
-          <div className="mb-4">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl font-bold text-emerald-700">
-                {org?.subscriptionTier === "STARTER" && "Starter"}
-                {org?.subscriptionTier === "GROWTH" && "Growth"}
-                {org?.subscriptionTier === "PLUS" && "Plus"}
-              </span>
-              {org?.subscriptionTier === "STARTER" && (
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
-                  100 Donors
-                </span>
-              )}
-              {org?.subscriptionTier === "GROWTH" && (
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                  500 Donors
-                </span>
-              )}
-              {org?.subscriptionTier === "PLUS" && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                  Unlimited
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              {org?.subscriptionTier === "STARTER" &&
-                "$29/month - All core features for small nonprofits"}
-              {org?.subscriptionTier === "GROWTH" &&
-                "$59/month - Advanced features including tax letter generation"}
-              {org?.subscriptionTier === "PLUS" &&
-                "$99/month - Complete platform with unlimited donors"}
-            </p>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl font-bold text-emerald-700">
+              {org?.subscriptionTier === "STARTER" && "Starter"}
+              {org?.subscriptionTier === "GROWTH" && "Growth"}
+              {org?.subscriptionTier === "PLUS" && "Plus"}
+            </span>
             {org?.subscriptionTier === "STARTER" && (
-              <a
-                href="/app/upgrade"
-                className="inline-block w-full text-center px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-              >
-                Upgrade Plan
-              </a>
+              <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">100 Donors</span>
+            )}
+            {org?.subscriptionTier === "GROWTH" && (
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">500 Donors</span>
+            )}
+            {org?.subscriptionTier === "PLUS" && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Unlimited</span>
             )}
           </div>
+          <p className="text-sm text-gray-600 mb-4">
+            {org?.subscriptionTier === "STARTER" && "$29/month · All core features for small nonprofits"}
+            {org?.subscriptionTier === "GROWTH" && "$59/month · Advanced features including tax letter generation"}
+            {org?.subscriptionTier === "PLUS" && "$99/month · Complete platform with unlimited donors"}
+          </p>
+
+          <div className="space-y-2">
+            {org?.subscriptionTier === "STARTER" && (
+              <button
+                onClick={() => navigate("/app/upgrade")}
+                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+              >
+                Upgrade Plan
+              </button>
+            )}
+            {org?.subscriptionTier === "GROWTH" && (
+              <button
+                onClick={() => navigate("/app/upgrade")}
+                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+              >
+                Upgrade to Plus
+              </button>
+            )}
+            {(org?.subscriptionTier === "GROWTH" || org?.subscriptionTier === "PLUS") && (
+              <>
+                {!showCancelConfirm ? (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="w-full px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
+                  >
+                    Cancel Subscription
+                  </button>
+                ) : (
+                  <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                    <p className="text-sm text-red-800 font-medium mb-1">Are you sure?</p>
+                    <p className="text-xs text-red-700 mb-3">
+                      Your subscription will be canceled immediately and you'll be moved to the Starter plan (100 donor limit).
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCancelSubscription}
+                        disabled={canceling}
+                        className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {canceling ? "Canceling..." : "Yes, cancel"}
+                      </button>
+                      <button
+                        onClick={() => setShowCancelConfirm(false)}
+                        className="flex-1 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                      >
+                        Keep plan
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           {org?.subscriptionTier === "STARTER" && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>Upgrade to Growth or Plus</strong> to unlock tax letter
                 generation, manage more donors, and get priority support.
