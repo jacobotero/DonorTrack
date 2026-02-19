@@ -126,6 +126,12 @@ router.delete(
         return;
       }
 
+      // Clear fund name from all donations referencing this fund
+      await prisma.donation.updateMany({
+        where: { organizationId: orgId, fund: existing.name },
+        data: { fund: null },
+      });
+
       await prisma.fund.delete({ where: { id: req.params.id } });
 
       res.json({ message: "Fund permanently deleted" });

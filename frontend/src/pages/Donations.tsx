@@ -355,7 +355,9 @@ export default function Donations() {
                       {formatDate(donation.donationDate)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {donation.fund || "—"}
+                      {donation.fund && funds.find((f) => f.name === donation.fund)?.isActive !== false
+                        ? donation.fund
+                        : "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {donation.paymentMethod || "—"}
