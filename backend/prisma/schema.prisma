@@ -52,7 +52,7 @@ model Organization {
   smtpUser         String?          @map("smtp_user") @db.VarChar(255)
   smtpPass         String?          @map("smtp_pass") @db.VarChar(500)
   smtpFromName     String?          @map("smtp_from_name") @db.VarChar(255)
-  subscriptionTier     SubscriptionTier   @default(STARTER) @map("subscription_tier")
+  subscriptionTier     SubscriptionTier   @default(PLUS) @map("subscription_tier")
   subscriptionStatus   SubscriptionStatus @default(TRIALING) @map("subscription_status")
   trialEndsAt          DateTime?          @map("trial_ends_at")
   stripeCustomerId     String?            @map("stripe_customer_id") @db.VarChar(255)
