@@ -19,6 +19,9 @@ import { checkTrialStatus } from "./middleware/trialCheck";
 
 const app = express();
 
+// Trust Railway/Vercel proxy so rate limiters get real client IPs
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(
   helmet({

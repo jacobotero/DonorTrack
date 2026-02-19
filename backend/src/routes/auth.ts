@@ -321,10 +321,12 @@ router.post(
       const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
       if (!user) {
+        console.log(`[forgot-password] No account found for ${email}`);
         res.json({ message: genericMessage });
         return;
       }
 
+      console.log(`[forgot-password] Sending reset email to ${user.email}`);
       const resetToken = generateVerificationToken();
       const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
