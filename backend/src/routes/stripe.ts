@@ -107,6 +107,7 @@ router.post(
             where: { id: organizationId },
             data: {
               subscriptionTier: plan as "STARTER" | "GROWTH" | "PLUS",
+              subscriptionStatus: "ACTIVE",
               trialEndsAt: null,
               stripeCustomerId: session.customer as string || null,
               stripeSubscriptionId: session.subscription as string || null,
@@ -162,7 +163,7 @@ router.post(
       await prisma.organization.update({
         where: { id: org.id },
         data: {
-          subscriptionTier: "STARTER",
+          subscriptionStatus: "CANCELED",
           stripeSubscriptionId: null,
         },
       });

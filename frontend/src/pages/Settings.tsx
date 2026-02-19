@@ -192,9 +192,9 @@ export default function Settings() {
     setCanceling(true);
     try {
       await api.post("/stripe/cancel-subscription");
-      setOrg((prev) => prev ? { ...prev, subscriptionTier: "STARTER" } : prev);
       setShowCancelConfirm(false);
-      toast.success("Subscription canceled. Your data is saved — you can resubscribe anytime.");
+      toast.success("Subscription canceled. You will be redirected shortly.");
+      setTimeout(() => { window.location.href = "/upgrade?subscription_canceled=true"; }, 1500);
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to cancel subscription");
     } finally {
@@ -566,7 +566,7 @@ export default function Settings() {
                   <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                     <p className="text-sm text-red-800 font-medium mb-1">Are you sure?</p>
                     <p className="text-xs text-red-700 mb-3">
-                      Billing stops immediately and you'll move to the Starter plan (100 donor limit). All your data is preserved — you can resubscribe anytime.
+                      Billing stops immediately and your account will be locked until you resubscribe. All your data is preserved.
                     </p>
                     <div className="flex gap-2">
                       <button

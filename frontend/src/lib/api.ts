@@ -20,8 +20,9 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       window.location.href = "/login";
     } else if (error.response?.status === 402 && error.response?.data?.trialExpired) {
-      // Trial expired - redirect to upgrade page
       window.location.href = "/app/upgrade?trial_expired=true";
+    } else if (error.response?.status === 402 && error.response?.data?.subscriptionCanceled) {
+      window.location.href = "/upgrade?subscription_canceled=true";
     }
     return Promise.reject(error);
   }

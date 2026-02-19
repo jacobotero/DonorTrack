@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import prisma from "../prisma";
 
 /**
- * Middleware to check if user's trial has expired
- * Blocks access if trial ended and still on STARTER tier
+ * Middleware to check subscription status before allowing access
  */
 export const checkTrialStatus = async (
   req: Request,
@@ -20,6 +19,7 @@ export const checkTrialStatus = async (
       where: { userId: req.user.userId },
       select: {
         subscriptionTier: true,
+        subscriptionStatus: true,
         trialEndsAt: true,
       },
     });
@@ -29,13 +29,23 @@ export const checkTrialStatus = async (
       return;
     }
 
-    // If user is on a paid plan (GROWTH or PLUS), allow access
-    if (org.subscriptionTier !== "STARTER") {
+    // Canceled subscription — lock out completely
+    if (org.subscriptionStatus === "CANCELED") {
+      res.status(402).json({
+        error: "Subscription canceled",
+        message: "Your subscription has been canceled. Please resubscribe to continue using DonorTrack.",
+        subscriptionCanceled: true,
+      });
+      return;
+    }
+
+    // Active paid subscription — allow
+    if (org.subscriptionStatus === "ACTIVE") {
       next();
       return;
     }
 
-    // If user is on STARTER and trial has expired, block access
+    // TRIALING — check if trial has expired
     if (org.trialEndsAt && new Date() > org.trialEndsAt) {
       res.status(402).json({
         error: "Trial expired",
@@ -45,10 +55,10 @@ export const checkTrialStatus = async (
       return;
     }
 
-    // Trial is still active or user is on paid plan
+    // Trial still active
     next();
   } catch (error) {
     console.error("Trial check error:", error);
-    next(); // Don't block on error, just log it
+    next(); // Don't block on error
   }
 };

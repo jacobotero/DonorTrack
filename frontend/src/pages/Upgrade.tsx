@@ -64,6 +64,7 @@ export default function Upgrade() {
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
   const trialExpired = searchParams.get("trial_expired") === "true";
   const canceled = searchParams.get("canceled") === "true";
+  const subscriptionCanceled = searchParams.get("subscription_canceled") === "true";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +119,23 @@ export default function Upgrade() {
             </p>
           )}
         </div>
+
+        {/* Subscription Canceled Banner */}
+        {subscriptionCanceled && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-12">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900 mb-2">
+                  Your Subscription Has Been Canceled
+                </h3>
+                <p className="text-red-800 mb-2">
+                  Your subscription is no longer active. All your data is safely preserved — select a plan below to resubscribe and regain access instantly.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Payment Canceled Banner */}
         {canceled && (
