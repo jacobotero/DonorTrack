@@ -21,7 +21,7 @@ router.post(
       // Get organization
       const org = await prisma.organization.findFirst({
         where: { userId: req.user!.userId },
-        select: { id: true, subscriptionTier: true },
+        select: { id: true, subscriptionTier: true, subscriptionStatus: true },
       });
 
       if (!org) {
@@ -29,8 +29,8 @@ router.post(
         return;
       }
 
-      // Don't allow downgrading or same plan
-      if (org.subscriptionTier === plan) {
+      // Don't allow same plan — unless subscription is canceled (resubscribing is allowed)
+      if (org.subscriptionTier === plan && org.subscriptionStatus !== "CANCELED") {
         res.status(400).json({ error: "You are already on this plan" });
         return;
       }
