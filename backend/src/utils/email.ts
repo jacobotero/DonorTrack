@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 export interface EmailOptions {
   to: string;
@@ -79,12 +80,12 @@ class EmailService {
     await transporter.verify();
   }
 
-  // Send using system SMTP (for verification emails etc.)
+  // Send using Resend (for verification emails etc.)
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    const transporter = this.getSystemTransporter();
+    const apiKey = process.env.RESEND_API_KEY;
 
-    if (!transporter) {
-      console.log("\n📧 Email would be sent (SMTP not configured):");
+    if (!apiKey) {
+      console.log("\n📧 Email would be sent (Resend not configured):");
       console.log(`To: ${options.to}`);
       console.log(`Subject: ${options.subject}`);
       console.log(`Body: ${options.text}`);
@@ -96,16 +97,15 @@ class EmailService {
     }
 
     try {
-      const { SMTP_FROM, SMTP_FROM_NAME } = process.env;
-      const from = SMTP_FROM_NAME ? `"${SMTP_FROM_NAME}" <${SMTP_FROM}>` : SMTP_FROM;
+      const resend = new Resend(apiKey);
+      const from = `DonorTrack <noreply@donortrackapp.com>`;
 
-      await transporter.sendMail({
+      await resend.emails.send({
         from,
         to: options.to,
         subject: options.subject,
         text: options.text,
         html: options.html || options.text,
-        attachments: options.attachments,
       });
 
       console.log(`✅ Email sent successfully to ${options.to}`);
