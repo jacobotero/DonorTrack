@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./hooks/useAuth";
+import { DarkModeProvider } from "./hooks/useDarkMode";
 import AppLayout from "./components/layout/AppLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -25,6 +26,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <DarkModeProvider>
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -51,6 +53,7 @@ function App() {
           <Toaster position="top-right" />
         </AuthProvider>
       </BrowserRouter>
+      </DarkModeProvider>
     </QueryClientProvider>
   );
 }

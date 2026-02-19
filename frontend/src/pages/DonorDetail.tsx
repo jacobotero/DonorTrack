@@ -7,18 +7,11 @@ import type { Donor, Donation } from "../types";
 import toast from "react-hot-toast";
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function DonorDetail() {
@@ -31,12 +24,8 @@ export default function DonorDetail() {
   const [editForm, setEditForm] = useState<Partial<Donor>>({});
 
   useEffect(() => {
-    api
-      .get(`/donors/${id}`)
-      .then((res) => {
-        setDonor(res.data.donor);
-        setEditForm(res.data.donor);
-      })
+    api.get(`/donors/${id}`)
+      .then((res) => { setDonor(res.data.donor); setEditForm(res.data.donor); })
       .catch(() => toast.error("Donor not found"))
       .finally(() => setLoading(false));
   }, [id]);
@@ -63,6 +52,8 @@ export default function DonorDetail() {
     }
   };
 
+  const inputClass = "px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500";
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,182 +63,84 @@ export default function DonorDetail() {
   }
 
   if (!donor) {
-    return <div className="text-center text-gray-500 py-8">Donor not found</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400 py-8">Donor not found</div>;
   }
 
   return (
     <div>
-      <Link
-        to="/app/donors"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
-      >
+      <Link to="/app/donors" className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-4">
         <ArrowLeft className="w-4 h-4" /> Back to Donors
       </Link>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {donor.firstName} {donor.lastName}
         </h1>
         <div className="flex gap-2">
-          <button
-            onClick={() => setEditing(!editing)}
-            className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit
+          <button onClick={() => setEditing(!editing)} className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+            <Edit2 className="w-4 h-4" /> Edit
           </button>
-          <button
-            onClick={handleDelete}
-            className="flex items-center gap-2 px-3 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
+          <button onClick={handleDelete} className="flex items-center gap-2 px-3 py-2 text-sm border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
+            <Trash2 className="w-4 h-4" /> Delete
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Donor Info */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Information</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Information</h2>
           {editing ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <input
-                  value={editForm.firstName || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, firstName: e.target.value })
-                  }
-                  placeholder="First name"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <input
-                  value={editForm.lastName || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, lastName: e.target.value })
-                  }
-                  placeholder="Last name"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                <input value={editForm.firstName || ""} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} placeholder="First name" className={inputClass} />
+                <input value={editForm.lastName || ""} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} placeholder="Last name" className={inputClass} />
               </div>
-              <input
-                value={editForm.email || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, email: e.target.value })
-                }
-                placeholder="Email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <input
-                value={editForm.phone || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, phone: e.target.value })
-                }
-                placeholder="Phone"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <select
-                value={editForm.donorType || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, donorType: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              >
+              <input value={editForm.email || ""} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} placeholder="Email" className={`w-full ${inputClass}`} />
+              <input value={editForm.phone || ""} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} placeholder="Phone" className={`w-full ${inputClass}`} />
+              <select value={editForm.donorType || ""} onChange={(e) => setEditForm({ ...editForm, donorType: e.target.value })} className={`w-full ${inputClass}`}>
                 <option value="">Select donor type</option>
                 <option value="Individual">Individual</option>
                 <option value="Family">Family</option>
                 <option value="Business">Business</option>
                 <option value="Foundation">Foundation</option>
               </select>
-              <input
-                value={editForm.addressLine1 || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, addressLine1: e.target.value })
-                }
-                placeholder="Street address"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+              <input value={editForm.addressLine1 || ""} onChange={(e) => setEditForm({ ...editForm, addressLine1: e.target.value })} placeholder="Street address" className={`w-full ${inputClass}`} />
               <div className="grid grid-cols-3 gap-3">
-                <input
-                  value={editForm.city || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, city: e.target.value })
-                  }
-                  placeholder="City"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <input
-                  value={editForm.state || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, state: e.target.value })
-                  }
-                  placeholder="State"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <input
-                  value={editForm.zip || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, zip: e.target.value })
-                  }
-                  placeholder="ZIP"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                <input value={editForm.city || ""} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} placeholder="City" className={inputClass} />
+                <input value={editForm.state || ""} onChange={(e) => setEditForm({ ...editForm, state: e.target.value })} placeholder="State" className={inputClass} />
+                <input value={editForm.zip || ""} onChange={(e) => setEditForm({ ...editForm, zip: e.target.value })} placeholder="ZIP" className={inputClass} />
               </div>
-              <textarea
-                value={editForm.notes || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, notes: e.target.value })
-                }
-                placeholder="Notes"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+              <textarea value={editForm.notes || ""} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Notes" rows={3} className={`w-full ${inputClass}`} />
               <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setEditing(false);
-                    setEditForm(donor);
-                  }}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
+                <button onClick={handleSave} className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Save</button>
+                <button onClick={() => { setEditing(false); setEditForm(donor); }} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
               </div>
             </div>
           ) : (
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-gray-500">Email</dt>
-                <dd className="text-gray-900">{donor.email || "—"}</dd>
+                <dt className="text-gray-500 dark:text-gray-400">Email</dt>
+                <dd className="text-gray-900 dark:text-white">{donor.email || "—"}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Phone</dt>
-                <dd className="text-gray-900">{donor.phone || "—"}</dd>
+                <dt className="text-gray-500 dark:text-gray-400">Phone</dt>
+                <dd className="text-gray-900 dark:text-white">{donor.phone || "—"}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Type</dt>
-                <dd className="text-gray-900">{donor.donorType || "—"}</dd>
+                <dt className="text-gray-500 dark:text-gray-400">Type</dt>
+                <dd className="text-gray-900 dark:text-white">{donor.donorType || "—"}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Address</dt>
-                <dd className="text-gray-900">
-                  {donor.addressLine1
-                    ? `${donor.addressLine1}, ${donor.city || ""} ${donor.state || ""} ${donor.zip || ""}`
-                    : "—"}
+                <dt className="text-gray-500 dark:text-gray-400">Address</dt>
+                <dd className="text-gray-900 dark:text-white">
+                  {donor.addressLine1 ? `${donor.addressLine1}, ${donor.city || ""} ${donor.state || ""} ${donor.zip || ""}` : "—"}
                 </dd>
               </div>
               {donor.notes && (
                 <div>
-                  <dt className="text-gray-500">Notes</dt>
-                  <dd className="text-gray-900 whitespace-pre-wrap">
-                    {donor.notes}
-                  </dd>
+                  <dt className="text-gray-500 dark:text-gray-400">Notes</dt>
+                  <dd className="text-gray-900 dark:text-white whitespace-pre-wrap">{donor.notes}</dd>
                 </div>
               )}
             </dl>
@@ -257,56 +150,37 @@ export default function DonorDetail() {
         {/* Stats + Donation History */}
         <div className="lg:col-span-2 space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <p className="text-sm text-gray-500">Total Giving</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(donor.totalGiving || 0)}
-              </p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Giving</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(donor.totalGiving || 0)}</p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <p className="text-sm text-gray-500">Donations</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {donor.donations?.length || 0}
-              </p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Donations</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{donor.donations?.length || 0}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="font-semibold text-gray-900">Donation History</h2>
-              <Link
-                to={`/app/donations?action=add&donorId=${donor.id}`}
-                className="flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                Add Donation
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900 dark:text-white">Donation History</h2>
+              <Link to={`/app/donations?action=add&donorId=${donor.id}`} className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium">
+                <Plus className="w-4 h-4" /> Add Donation
               </Link>
             </div>
             {donor.donations && donor.donations.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {donor.donations.map((d: Donation) => (
-                  <div
-                    key={d.id}
-                    className="px-6 py-3 flex items-center justify-between"
-                  >
+                  <div key={d.id} className="px-6 py-3 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(d.donationDate)}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {d.fund || "General"} · {d.paymentMethod || "—"}
-                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(d.donationDate)}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{d.fund || "General"} · {d.paymentMethod || "—"}</p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(Number(d.amount))}
-                    </span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(Number(d.amount))}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-6 text-center text-sm text-gray-500">
-                No donations recorded yet
-              </div>
+              <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">No donations recorded yet</div>
             )}
           </div>
         </div>

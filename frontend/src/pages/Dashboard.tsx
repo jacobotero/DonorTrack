@@ -30,7 +30,6 @@ function formatDate(dateString: string) {
   });
 }
 
-// Calculate date ranges for presets
 function getDateRange(preset: string): { startDate: string; endDate: string } {
   const now = new Date();
   const endDate = now.toISOString().split("T")[0];
@@ -52,9 +51,7 @@ function getDateRange(preset: string): { startDate: string; endDate: string } {
       return { startDate, endDate: end.toISOString().split("T")[0] };
     }
     case "this_month": {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-        .toISOString()
-        .split("T")[0];
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
       break;
     }
     case "last_month": {
@@ -65,9 +62,7 @@ function getDateRange(preset: string): { startDate: string; endDate: string } {
     }
     case "this_quarter": {
       const quarter = Math.floor(now.getMonth() / 3);
-      startDate = new Date(now.getFullYear(), quarter * 3, 1)
-        .toISOString()
-        .split("T")[0];
+      startDate = new Date(now.getFullYear(), quarter * 3, 1).toISOString().split("T")[0];
       break;
     }
     case "last_quarter": {
@@ -85,10 +80,7 @@ function getDateRange(preset: string): { startDate: string; endDate: string } {
     case "last_year": {
       const lastYear = now.getFullYear() - 1;
       startDate = new Date(lastYear, 0, 1).toISOString().split("T")[0];
-      return {
-        startDate,
-        endDate: new Date(lastYear, 11, 31).toISOString().split("T")[0],
-      };
+      return { startDate, endDate: new Date(lastYear, 11, 31).toISOString().split("T")[0] };
     }
     case "all_time":
       return { startDate: "", endDate: "" };
@@ -112,7 +104,6 @@ export default function Dashboard() {
   const fetchStats = () => {
     setLoading(true);
     let params: Record<string, string> = {};
-
     if (dateRangePreset === "custom") {
       if (customStartDate) params.startDate = customStartDate;
       if (customEndDate) params.endDate = customEndDate;
@@ -121,9 +112,7 @@ export default function Dashboard() {
       if (range.startDate) params.startDate = range.startDate;
       if (range.endDate) params.endDate = range.endDate;
     }
-
-    api
-      .get("/dashboard/stats", { params })
+    api.get("/dashboard/stats", { params })
       .then((res) => {
         setStats(res.data.stats);
         setRecentDonations(res.data.recentDonations);
@@ -133,11 +122,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Fetch organization on mount
-    api
-      .get("/organization")
-      .then((res) => setOrganization(res.data.organization))
-      .catch(console.error);
+    api.get("/organization").then((res) => setOrganization(res.data.organization)).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -147,7 +132,6 @@ export default function Dashboard() {
   const handleExport = async (reportType: string, format: string) => {
     try {
       let params: Record<string, string> = { format };
-
       if (dateRangePreset === "custom") {
         if (customStartDate) params.startDate = customStartDate;
         if (customEndDate) params.endDate = customEndDate;
@@ -156,30 +140,20 @@ export default function Dashboard() {
         if (range.startDate) params.startDate = range.startDate;
         if (range.endDate) params.endDate = range.endDate;
       }
-
-      const response = await api.get(`/reports/${reportType}`, {
-        params,
-        responseType: "blob",
-      });
-
+      const response = await api.get(`/reports/${reportType}`, { params, responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `${reportType}-report.${format === "pdf" ? "pdf" : "csv"}`
-      );
+      link.setAttribute("download", `${reportType}-report.${format === "pdf" ? "pdf" : "csv"}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-
-      toast.success(`Report exported successfully`);
+      toast.success("Report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Failed to export report");
     }
   };
-
 
   if (loading) {
     return (
@@ -189,16 +163,18 @@ export default function Dashboard() {
     );
   }
 
+  const selectClass = "px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white";
+
   return (
     <div>
       {organization && <TrialBanner organization={organization} />}
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <div className="flex gap-3">
           <Link
             to="/app/donors?action=add"
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <Plus className="w-4 h-4" />
             Add Donor
@@ -214,19 +190,13 @@ export default function Dashboard() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">
-              Date Range:
-            </span>
+            <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range:</span>
           </div>
-          <select
-            value={dateRangePreset}
-            onChange={(e) => setDateRangePreset(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
+          <select value={dateRangePreset} onChange={(e) => setDateRangePreset(e.target.value)} className={selectClass}>
             <option value="this_week">This Week</option>
             <option value="last_week">Last Week</option>
             <option value="this_month">This Month</option>
@@ -238,24 +208,11 @@ export default function Dashboard() {
             <option value="all_time">All Time</option>
             <option value="custom">Custom Range</option>
           </select>
-
           {dateRangePreset === "custom" && (
             <>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="Start Date"
-              />
-              <span className="text-sm text-gray-500">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="End Date"
-              />
+              <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className={selectClass} />
+              <span className="text-sm text-gray-500 dark:text-gray-400">to</span>
+              <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className={selectClass} />
             </>
           )}
         </div>
@@ -263,68 +220,49 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500">
-              Selected Period
-            </span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Selected Period</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {formatCurrency(stats?.monthlyTotal || 0)}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats?.monthlyCount || 0} donations
-          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats?.monthlyTotal || 0)}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stats?.monthlyCount || 0} donations</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500">
-              Total
-            </span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {formatCurrency(stats?.yearlyTotal || 0)}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats?.yearlyCount || 0} donations
-          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats?.yearlyTotal || 0)}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stats?.yearlyCount || 0} donations</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Users className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-sm font-medium text-gray-500">
-              Total Donors
-            </span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Donors</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats?.totalDonors || 0}
-          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalDonors || 0}</p>
         </div>
       </div>
 
       {/* Tax Letters Quick Action */}
-      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200 p-6 mb-6">
+      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 p-6 mb-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-5 h-5 text-emerald-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Tax Letters
-              </h3>
+              <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tax Letters</h3>
             </div>
-            <p className="text-sm text-gray-600 max-w-2xl">
-              Generate IRS-compliant year-end donation receipts for your donors.
-              Perfect for tax season preparation.
+            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+              Generate IRS-compliant year-end donation receipts for your donors. Perfect for tax season preparation.
             </p>
           </div>
           <Link
@@ -338,93 +276,61 @@ export default function Dashboard() {
       </div>
 
       {/* Export Buttons */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <Download className="w-5 h-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">
-              Export Reports:
-            </span>
+            <Download className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Export Reports:</span>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => handleExport("summary", "pdf")}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-            >
-              <FileText className="w-4 h-4" />
-              Summary PDF
+            <button onClick={() => handleExport("summary", "pdf")} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
+              <FileText className="w-4 h-4" /> Summary PDF
             </button>
-            <button
-              onClick={() => handleExport("summary", "csv")}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <FileText className="w-4 h-4" />
-              Summary CSV
+            <button onClick={() => handleExport("summary", "csv")} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+              <FileText className="w-4 h-4" /> Summary CSV
             </button>
-            <button
-              onClick={() => handleExport("funds", "pdf")}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-            >
-              <FileText className="w-4 h-4" />
-              Funds PDF
+            <button onClick={() => handleExport("funds", "pdf")} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
+              <FileText className="w-4 h-4" /> Funds PDF
             </button>
-            <button
-              onClick={() => handleExport("funds", "csv")}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <FileText className="w-4 h-4" />
-              Funds CSV
+            <button onClick={() => handleExport("funds", "csv")} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+              <FileText className="w-4 h-4" /> Funds CSV
             </button>
-            <button
-              onClick={() => handleExport("top-donors", "pdf")}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-            >
-              <FileText className="w-4 h-4" />
-              Top Donors PDF
+            <button onClick={() => handleExport("top-donors", "pdf")} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
+              <FileText className="w-4 h-4" /> Top Donors PDF
             </button>
-            <button
-              onClick={() => handleExport("top-donors", "csv")}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <FileText className="w-4 h-4" />
-              Top Donors CSV
+            <button onClick={() => handleExport("top-donors", "csv")} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+              <FileText className="w-4 h-4" /> Top Donors CSV
             </button>
           </div>
         </div>
       </div>
 
       {/* Recent Donations */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-900">Recent Donations</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Recent Donations</h2>
         </div>
         {recentDonations.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <p>No donations recorded yet.</p>
-            <Link
-              to="/app/donations?action=add"
-              className="text-emerald-600 hover:text-emerald-700 font-medium text-sm mt-2 inline-block"
-            >
+            <Link to="/app/donations?action=add" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium text-sm mt-2 inline-block">
               Record your first donation
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {recentDonations.map((donation) => (
-              <div
-                key={donation.id}
-                className="px-6 py-3 flex items-center justify-between"
-              >
+              <div key={donation.id} className="px-6 py-3 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {donation.donor?.firstName} {donation.donor?.lastName}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatDate(donation.donationDate)}
                     {donation.fund && ` · ${donation.fund}`}
                   </p>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
                   {formatCurrency(Number(donation.amount))}
                 </span>
               </div>
