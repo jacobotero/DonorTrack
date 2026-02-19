@@ -494,24 +494,29 @@ export default function Settings() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subscription Plan</h2>
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-              {org?.subscriptionTier === "STARTER" && "Starter"}
-              {org?.subscriptionTier === "GROWTH" && "Growth"}
-              {org?.subscriptionTier === "PLUS" && "Plus"}
+              {org?.subscriptionStatus === "TRIALING" && "Free Trial"}
+              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && "Starter"}
+              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && "Growth"}
+              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && "Plus"}
             </span>
-            {org?.subscriptionTier === "STARTER" && (
+            {org?.subscriptionStatus === "TRIALING" && (
+              <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-medium rounded-full">Full Access</span>
+            )}
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && (
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-full">100 Donors</span>
             )}
-            {org?.subscriptionTier === "GROWTH" && (
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && (
               <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded-full">500 Donors</span>
             )}
-            {org?.subscriptionTier === "PLUS" && (
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && (
               <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full">Unlimited</span>
             )}
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {org?.subscriptionTier === "STARTER" && "$29/month · All core features for small nonprofits"}
-            {org?.subscriptionTier === "GROWTH" && "$59/month · Advanced features including tax letter generation"}
-            {org?.subscriptionTier === "PLUS" && "$99/month · Complete platform with unlimited donors"}
+            {org?.subscriptionStatus === "TRIALING" && "14-day free trial · Full access to all features"}
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && "$29/month · All core features for small nonprofits"}
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && "$59/month · Advanced features including tax letter generation"}
+            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && "$99/month · Complete platform with unlimited donors"}
           </p>
 
           <div className="space-y-2">
@@ -519,9 +524,9 @@ export default function Settings() {
               onClick={() => navigate("/app/upgrade")}
               className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
             >
-              Change Subscription Plan
+              {org?.subscriptionStatus === "TRIALING" ? "Purchase a Subscription Plan" : "Change Subscription Plan"}
             </button>
-            {(org?.subscriptionTier === "STARTER" || org?.subscriptionTier === "GROWTH" || org?.subscriptionTier === "PLUS") && (
+            {org?.subscriptionStatus === "ACTIVE" && (
               <>
                 {!showCancelConfirm ? (
                   <button
@@ -550,7 +555,14 @@ export default function Settings() {
             )}
           </div>
 
-          {org?.subscriptionTier === "STARTER" && (
+          {org?.subscriptionStatus === "TRIALING" && (
+            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                You have full access to all features during your trial. Purchase a plan before your trial ends to keep access.
+              </p>
+            </div>
+          )}
+          {org?.subscriptionStatus === "ACTIVE" && org?.subscriptionTier === "STARTER" && (
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>Upgrade to Growth or Plus</strong> to unlock tax letter generation, manage more donors, and get priority support.
