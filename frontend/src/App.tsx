@@ -20,6 +20,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailPending from "./pages/VerifyEmailPending";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Support from "./pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="tax-letters" element={<TaxLetters />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="support" element={<Support />} />
               <Route path="upgrade" element={<Upgrade />} />
             </Route>
           </Routes>

@@ -11,6 +11,7 @@ import {
   Menu,
   Lock,
   Heart,
+  LifeBuoy,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
@@ -22,6 +23,7 @@ const navItems = [
   { to: "/app/reports", icon: BarChart3, label: "Reports" },
   { to: "/app/tax-letters", icon: FileText, label: "Tax Letters" },
   { to: "/app/settings", icon: Settings, label: "Settings" },
+  { to: "/app/support", icon: LifeBuoy, label: "Support" },
 ];
 
 export default function Sidebar() {
