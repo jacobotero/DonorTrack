@@ -60,7 +60,7 @@ function detectProvider(host: string) {
 export default function Settings() {
   usePageTitle("Settings");
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, refreshUser } = useAuth();
   const [org, setOrg] = useState<Organization | null>(null);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +134,7 @@ export default function Settings() {
     try {
       const res = await api.put("/organization", form);
       setOrg(res.data.organization);
+      await refreshUser();
       toast.success("Organization updated");
     } catch {
       toast.error("Failed to save");
