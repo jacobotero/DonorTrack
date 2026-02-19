@@ -310,8 +310,51 @@ router.delete(
 router.post(
   "/forgot-password",
   validate(forgotPasswordSchema),
-  async (_req: Request, res: Response): Promise<void> => {
-    res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+  async (req: Request, res: Response): Promise<void> => {
+    const { email } = req.body;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    // Always return the same message to avoid leaking whether an account exists
+    const genericMessage = "If an account with that email exists, a password reset link has been sent.";
+
+    try {
+      const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+      if (!user) {
+        res.json({ message: genericMessage });
+        return;
+      }
+
+      const resetToken = generateVerificationToken();
+      const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry },
+      });
+
+      const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+      await emailService.sendEmail({
+        to: user.email,
+        subject: "Reset your password — DonorTrack",
+        text: `You requested a password reset for your DonorTrack account.\n\nClick the link below to set a new password:\n\n${resetUrl}\n\nThis link expires in 1 hour. If you did not request this, you can safely ignore this email.`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #059669;">Reset your password</h2>
+            <p>You requested a password reset for your DonorTrack account.</p>
+            <p>Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
+            <a href="${resetUrl}" style="display:inline-block;background:#059669;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0;">Reset Password</a>
+            <p style="color:#6b7280;font-size:14px;">If you did not request this, you can safely ignore this email. Your password will not change.</p>
+          </div>
+        `,
+      }).catch((err) => console.error("Failed to send password reset email:", err));
+
+      res.json({ message: genericMessage });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.json({ message: genericMessage }); // still generic on error
+    }
   }
 );
 
@@ -319,8 +362,29 @@ router.post(
 router.post(
   "/reset-password",
   validate(resetPasswordSchema),
-  async (_req: Request, res: Response): Promise<void> => {
-    res.json({ message: "Password reset functionality coming soon." });
+  async (req: Request, res: Response): Promise<void> => {
+    const { token, password } = req.body;
+
+    try {
+      const user = await prisma.user.findUnique({ where: { passwordResetToken: token } });
+
+      if (!user || !user.passwordResetExpiry || new Date() > user.passwordResetExpiry) {
+        res.status(400).json({ error: "Invalid or expired reset link. Please request a new one." });
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null },
+      });
+
+      res.json({ message: "Password updated successfully. You can now log in with your new password." });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
   }
 );
 

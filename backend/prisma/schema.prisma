@@ -25,6 +25,8 @@ model User {
   emailVerified            Boolean   @default(false) @map("email_verified")
   emailVerificationToken   String?   @unique @map("email_verification_token") @db.VarChar(255)
   emailVerificationExpiry  DateTime? @map("email_verification_expiry")
+  passwordResetToken       String?   @unique @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpiry      DateTime? @map("password_reset_expiry")
   createdAt                DateTime  @default(now()) @map("created_at")
   organization  Organization?
 

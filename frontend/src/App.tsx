@@ -17,6 +17,8 @@ import Upgrade from "./pages/Upgrade";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailPending from "./pages/VerifyEmailPending";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ function App() {
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="donors" element={<Donors />} />
