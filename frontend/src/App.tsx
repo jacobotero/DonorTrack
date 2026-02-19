@@ -21,6 +21,7 @@ import VerifyEmailPending from "./pages/VerifyEmailPending";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Support from "./pages/Support";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="donors" element={<Donors />} />

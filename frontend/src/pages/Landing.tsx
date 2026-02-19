@@ -471,7 +471,7 @@ export default function Landing() {
               <h3 className="text-white font-semibold mb-3">Support</h3>
               <ul className="space-y-2 text-sm">
                 <li><a href="https://github.com/jacobotero/DonorTrack" className="hover:text-white">Documentation</a></li>
-                <li><a href="https://github.com/jacobotero/DonorTrack/issues" className="hover:text-white">Contact</a></li>
+                <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
               </ul>
             </div>
             <div>

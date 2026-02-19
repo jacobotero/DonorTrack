@@ -76,3 +76,60 @@ router.post("/", async (req, res) => {
 });
 
 export default router;
+
+// Separate public router — no auth required (used from landing page contact form)
+export const publicContactRouter = Router();
+
+publicContactRouter.post("/", async (req, res) => {
+  try {
+    const { email, subject, message } = req.body;
+
+    if (!email?.trim() || !subject?.trim() || !message?.trim()) {
+      res.status(400).json({ error: "Email, subject, and message are required" });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      res.status(400).json({ error: "Please enter a valid email address" });
+      return;
+    }
+
+    if (message.trim().length < 10) {
+      res.status(400).json({ error: "Message must be at least 10 characters" });
+      return;
+    }
+
+    await emailService.sendEmail({
+      to: "donortrackapp@gmail.com",
+      subject: `[Contact] ${subject.trim()}`,
+      text: `Message from ${email.trim()}\n\n${message.trim()}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px;">
+          <h2 style="color: #059669;">New Contact Message</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+            <tr>
+              <td style="padding: 4px 8px; font-weight: bold; color: #374151; width: 120px;">From</td>
+              <td style="padding: 4px 8px; color: #6b7280;">${email.trim()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 8px; font-weight: bold; color: #374151;">Subject</td>
+              <td style="padding: 4px 8px; color: #6b7280;">${subject.trim()}</td>
+            </tr>
+          </table>
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0; color: #374151; white-space: pre-wrap;">${message.trim()}</p>
+          </div>
+          <p style="margin-top: 16px; color: #9ca3af; font-size: 12px;">
+            Reply directly to ${email.trim()} to respond.
+          </p>
+        </div>
+      `,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Contact email error:", error);
+    res.status(500).json({ error: "Failed to send message. Please try again." });
+  }
+});
