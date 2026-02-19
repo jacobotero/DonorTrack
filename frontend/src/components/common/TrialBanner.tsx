@@ -12,9 +12,9 @@ export default function TrialBanner({ organization }: TrialBannerProps) {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
-    // Only show for STARTER tier with active trial
+    // Only show for active trial
     if (
-      organization.subscriptionTier !== "STARTER" ||
+      organization.subscriptionStatus !== "TRIALING" ||
       !organization.trialEndsAt
     ) {
       return;
@@ -42,9 +42,9 @@ export default function TrialBanner({ organization }: TrialBannerProps) {
     );
   };
 
-  // Don't show if not on STARTER tier or no trial end date
+  // Don't show if not on active trial or no trial end date
   if (
-    organization.subscriptionTier !== "STARTER" ||
+    organization.subscriptionStatus !== "TRIALING" ||
     !organization.trialEndsAt ||
     daysLeft === null
   ) {
