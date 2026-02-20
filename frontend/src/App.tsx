@@ -25,6 +25,7 @@ import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ function App() {
               <Route path="support" element={<Support />} />
               <Route path="upgrade" element={<Upgrade />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="top-right" />
         </AuthProvider>
