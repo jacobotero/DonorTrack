@@ -14,6 +14,7 @@ import dashboardRoutes from "./routes/dashboard";
 import reportRoutes from "./routes/reports";
 import taxLetterRoutes from "./routes/tax-letters";
 import stripeRoutes from "./routes/stripe";
+import adminRoutes from "./routes/admin";
 import supportRoutes, { publicContactRouter } from "./routes/support";
 import { apiLimiter, authLimiter } from "./middleware/rateLimiter";
 import { authenticate } from "./middleware/auth";
@@ -89,6 +90,7 @@ app.use("/api/dashboard", authenticate, checkTrialStatus, dashboardRoutes);
 app.use("/api/reports", authenticate, checkTrialStatus, reportRoutes);
 app.use("/api/tax-letters", authenticate, checkTrialStatus, taxLetterRoutes);
 app.use("/api/stripe", stripeRoutes); // Stripe routes (webhook already mounted above, no trial check needed)
+app.use("/api/admin", adminRoutes); // Admin routes — protected by requireAdmin middleware internally
 app.use("/api/support", authenticate, supportRoutes); // No trial check — expired/canceled users need support too
 app.use("/api/contact", publicContactRouter); // Public — no auth required (landing page contact form)
 

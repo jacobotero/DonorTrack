@@ -16,6 +16,7 @@ const optionalEnvVars = [
   "SMTP_PASS",
   "SMTP_FROM",
   "SMTP_FROM_NAME",
+  "ADMIN_EMAIL", // If not set, admin panel is disabled
 ];
 
 export function validateEnv() {
