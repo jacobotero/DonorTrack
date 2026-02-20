@@ -21,11 +21,22 @@ export const checkTrialStatus = async (
         subscriptionTier: true,
         subscriptionStatus: true,
         trialEndsAt: true,
+        user: { select: { emailVerified: true } },
       },
     });
 
     if (!org) {
       res.status(404).json({ error: "Organization not found" });
+      return;
+    }
+
+    // Email must be verified before accessing the app
+    if (!org.user?.emailVerified) {
+      res.status(403).json({
+        error: "Email not verified",
+        message: "Please verify your email address before using DonorTrack.",
+        emailNotVerified: true,
+      });
       return;
     }
 

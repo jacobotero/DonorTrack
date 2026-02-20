@@ -20,6 +20,20 @@ function generateVerificationToken() {
   return randomBytes(32).toString("hex");
 }
 
+/**
+ * Normalize an email address for trial-abuse detection.
+ * Strips plus-addressing (user+tag@gmail.com → user@gmail.com) so that
+ * someone cannot create unlimited trials by varying the alias.
+ */
+function normalizeEmailForTrial(email: string): string {
+  const lower = email.toLowerCase();
+  const atIndex = lower.lastIndexOf("@");
+  if (atIndex === -1) return lower;
+  const local = lower.slice(0, atIndex).split("+")[0];
+  const domain = lower.slice(atIndex + 1);
+  return `${local}@${domain}`;
+}
+
 async function sendVerificationEmail(email: string, token: string) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
   const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
@@ -87,9 +101,12 @@ router.post(
 
       const passwordHash = await hashPassword(password);
 
-      // If this email has previously used a trial, don't grant a new one
+      // If this email has previously used a trial, don't grant a new one.
+      // normalizeEmail strips Gmail-style plus addressing (user+tag@gmail.com → user@gmail.com)
+      // so each inbox can only ever receive one free trial regardless of aliases.
+      const normalizedEmail = normalizeEmailForTrial(email);
       const priorTrial = await prisma.trialUsed.findUnique({
-        where: { email: email.toLowerCase() },
+        where: { email: normalizedEmail },
       });
       const trialEndsAt = priorTrial
         ? new Date(0) // already used — immediately expired
@@ -123,7 +140,7 @@ router.post(
 
       // Record that this email has used a trial (only on first registration)
       if (!priorTrial) {
-        await prisma.trialUsed.create({ data: { email: email.toLowerCase() } });
+        await prisma.trialUsed.create({ data: { email: normalizedEmail } });
       }
 
       // Non-blocking — registration succeeds even if email fails

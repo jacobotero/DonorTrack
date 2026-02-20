@@ -6,6 +6,7 @@ const requiredEnvVars = [
   "PORT",
   "NODE_ENV",
   "FRONTEND_URL",
+  "STRIPE_WEBHOOK_SECRET",
 ];
 
 const optionalEnvVars = [
