@@ -124,15 +124,15 @@ export default function Landing() {
               </button>
               <Link
                 to="/login"
-                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 text-sm font-medium"
+                className="hidden sm:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-4 py-2 text-sm font-medium"
               >
                 Log In
               </Link>
               <Link
                 to="/register"
-                className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                className="bg-emerald-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
               >
-                Get Started Free
+                <span className="hidden sm:inline">Get Started </span>Free
               </Link>
             </div>
           </div>
