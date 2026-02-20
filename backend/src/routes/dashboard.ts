@@ -29,7 +29,7 @@ router.get(
         if (!isNaN(sd.getTime())) dateFilter.gte = sd;
       }
       if (endDate && typeof endDate === "string") {
-        const ed = new Date(endDate);
+        const ed = new Date(endDate + "T23:59:59.999Z");
         if (!isNaN(ed.getTime())) dateFilter.lte = ed;
       }
 
@@ -60,8 +60,8 @@ router.get(
             where: { organizationId: org.id },
           }),
           prisma.donation.findMany({
-            where: { organizationId: org.id, isDeleted: false },
-            orderBy: { createdAt: "desc" },
+            where: filteredWhere,
+            orderBy: { donationDate: "desc" },
             take: 10,
             include: {
               donor: {

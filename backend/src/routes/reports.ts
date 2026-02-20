@@ -23,7 +23,7 @@ function parseDateRange(startDate?: string, endDate?: string) {
       if (!isNaN(sd.getTime())) where.donationDate.gte = sd;
     }
     if (endDate) {
-      const ed = new Date(endDate);
+      const ed = new Date(endDate + "T23:59:59.999Z");
       if (!isNaN(ed.getTime())) where.donationDate.lte = ed;
     }
   }
