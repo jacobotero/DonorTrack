@@ -130,7 +130,7 @@ export default function Reports() {
 
       {/* Fund Report */}
       {data && reportType === "funds" && data.funds && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
@@ -154,7 +154,7 @@ export default function Reports() {
 
       {/* Top Donors Report */}
       {data && reportType === "top-donors" && data.topDonors && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-left">

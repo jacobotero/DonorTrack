@@ -290,50 +290,52 @@ export default function TaxLetters() {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {letters.map((letter) => (
-              <div key={letter.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      {letter.donor?.firstName} {letter.donor?.lastName}
-                    </h3>
-                    {letter.sentDate ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded">
-                        <CheckCircle className="w-3 h-3" /> Sent
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium rounded">
-                        <AlertCircle className="w-3 h-3" /> Not Sent
-                      </span>
+              <div key={letter.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {letter.donor?.firstName} {letter.donor?.lastName}
+                      </h3>
+                      {letter.sentDate ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded">
+                          <CheckCircle className="w-3 h-3" /> Sent
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium rounded">
+                          <AlertCircle className="w-3 h-3" /> Not Sent
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>Year: {letter.year}</span>
+                      <span>Total: {formatCurrency(Number(letter.totalAmount))}</span>
+                      <span>Generated: {formatDate(letter.letterDate)}</span>
+                      {letter.sentDate && <span>Sent: {formatDate(letter.sentDate)}</span>}
+                    </div>
+                    {letter.donor?.email && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{letter.donor.email}</p>}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => handleDownloadPDF(letter.id, `${letter.donor?.firstName}-${letter.donor?.lastName}`)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
+                      <Download className="w-4 h-4" /> PDF
+                    </button>
+                    {letter.donor?.email && (
+                      <button onClick={() => handleSendEmail(letter.id, letter.donor?.email || "")} disabled={sendingEmail === letter.id} className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <Send className="w-4 h-4" /> <span className="hidden sm:inline">{sendingEmail === letter.id ? "Sending..." : "Send Email"}</span>
+                      </button>
+                    )}
+                    {!letter.sentDate && (
+                      <button onClick={() => handleMarkSent(letter.id)} className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <Send className="w-4 h-4" /> <span className="hidden sm:inline">Mark Sent</span>
+                      </button>
+                    )}
+                    {letter.sentDate && (
+                      <button onClick={() => handleMarkUnsent(letter.id)} className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600" title="Mark as not sent">
+                        <Undo2 className="w-4 h-4" /> <span className="hidden sm:inline">Undo</span>
+                      </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    <span>Year: {letter.year}</span>
-                    <span>Total: {formatCurrency(Number(letter.totalAmount))}</span>
-                    <span>Generated: {formatDate(letter.letterDate)}</span>
-                    {letter.sentDate && <span>Sent: {formatDate(letter.sentDate)}</span>}
-                  </div>
-                  {letter.donor?.email && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{letter.donor.email}</p>}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleDownloadPDF(letter.id, `${letter.donor?.firstName}-${letter.donor?.lastName}`)} className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
-                    <Download className="w-4 h-4" /> PDF
-                  </button>
-                  {letter.donor?.email && (
-                    <button onClick={() => handleSendEmail(letter.id, letter.donor?.email || "")} disabled={sendingEmail === letter.id} className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                      <Send className="w-4 h-4" /> {sendingEmail === letter.id ? "Sending..." : "Send Email"}
-                    </button>
-                  )}
-                  {!letter.sentDate && (
-                    <button onClick={() => handleMarkSent(letter.id)} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600">
-                      <Send className="w-4 h-4" /> Mark Sent
-                    </button>
-                  )}
-                  {letter.sentDate && (
-                    <button onClick={() => handleMarkUnsent(letter.id)} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600" title="Mark as not sent">
-                      <Undo2 className="w-4 h-4" /> Undo
-                    </button>
-                  )}
                 </div>
               </div>
             ))}

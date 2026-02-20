@@ -220,6 +220,7 @@ export default function Donations() {
           <div className="p-8 text-center text-gray-500 dark:text-gray-400"><p>No donations found.</p></div>
         ) : (
           <>
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
@@ -257,9 +258,10 @@ export default function Donations() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {pagination && pagination.totalPages > 1 && (
-              <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
                 </p>
