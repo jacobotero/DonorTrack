@@ -109,6 +109,12 @@ export default function Landing() {
               >
                 Pricing
               </a>
+              <Link
+                to="/help"
+                className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
+              >
+                Docs
+              </Link>
               <button
                 onClick={toggleDark}
                 className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

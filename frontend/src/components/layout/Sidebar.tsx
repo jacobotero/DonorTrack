@@ -12,6 +12,7 @@ import {
   Lock,
   Heart,
   LifeBuoy,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
@@ -77,6 +78,13 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <Link
+          to="/help"
+          className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors mb-3"
+        >
+          <BookOpen className="w-4 h-4" />
+          Help & Docs
+        </Link>
         <div className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2">
           {user?.email}
         </div>
