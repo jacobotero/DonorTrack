@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Heart,
   ArrowLeft,
@@ -83,6 +83,7 @@ const navSections = [
 
 export default function Help() {
   usePageTitle("Help & Documentation");
+  const navigate = useNavigate();
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -93,10 +94,13 @@ export default function Help() {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          <button
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </Link>
+            Back
+          </button>
           <div className="h-4 w-px bg-gray-300 dark:bg-gray-600" />
           <div className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-emerald-600" />
