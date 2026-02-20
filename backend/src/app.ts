@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import * as Sentry from "@sentry/node";
 
 import authRoutes from "./routes/auth";
 import organizationRoutes from "./routes/organization";
@@ -95,6 +96,9 @@ app.use("/api/contact", publicContactRouter); // Public — no auth required (la
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// Sentry error handler — must come before the custom error handler
+Sentry.setupExpressErrorHandler(app);
 
 // Global error handler
 app.use(

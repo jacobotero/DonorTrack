@@ -3,6 +3,15 @@ import dotenv from "dotenv";
 // Load environment variables FIRST, before any other imports
 dotenv.config();
 
+// Sentry must be initialized before any other imports so it can instrument them
+import * as Sentry from "@sentry/node";
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV || "development",
+  enabled: !!process.env.SENTRY_DSN,
+  tracesSampleRate: 0.2,
+});
+
 import app from "./app";
 import { validateEnv, config } from "./config/env";
 import cron from "node-cron";
