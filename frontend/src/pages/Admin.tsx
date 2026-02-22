@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { Users, DollarSign, TrendingUp, XCircle, Trash2, CheckCircle, Clock } from "lucide-react";
+import { Users, DollarSign, TrendingUp, XCircle, Trash2, CheckCircle, Clock, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../lib/api";
 
@@ -109,6 +109,9 @@ export default function Admin() {
     if (!confirm(`Permanently delete ${email} and all their data? This cannot be undone.`)) return;
     action(`delete-${orgId}`, () => api.delete(`/admin/orgs/${orgId}`));
   };
+
+  const verifyEmail = (userId: string) =>
+    action(`verify-${userId}`, () => api.patch(`/admin/users/${userId}/verify`));
 
   const filtered = users.filter((u) => {
     const matchSearch =
@@ -297,6 +300,19 @@ export default function Admin() {
                       <td className="px-4 py-3">
                         {org ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Verify email */}
+                            {!u.emailVerified && (
+                              <button
+                                onClick={() => verifyEmail(u.id)}
+                                disabled={!!actionLoading}
+                                title="Manually verify email"
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50"
+                              >
+                                <ShieldCheck className="w-3 h-3" />
+                                {isLoading(`verify-${u.id}`) ? "..." : "Verify"}
+                              </button>
+                            )}
+
                             {/* Extend trial */}
                             <button
                               onClick={() => extendTrial(org.id, 14)}

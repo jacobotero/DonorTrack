@@ -141,6 +141,21 @@ router.patch("/orgs/:orgId/cancel", authenticate, requireAdmin as any, async (re
   }
 });
 
+// PATCH /api/admin/users/:userId/verify
+router.patch("/users/:userId/verify", authenticate, requireAdmin as any, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true },
+    });
+    res.json({ message: "Email verified" });
+  } catch (error) {
+    console.error("Admin verify error:", error);
+    res.status(500).json({ error: "Failed to verify email" });
+  }
+});
+
 // DELETE /api/admin/orgs/:orgId
 router.delete("/orgs/:orgId", authenticate, requireAdmin as any, async (req: Request, res: Response) => {
   try {
