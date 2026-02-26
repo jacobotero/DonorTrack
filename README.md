@@ -1,233 +1,187 @@
 # DonorTrack
 
-**Modern donor management and donation tracking for small nonprofits and churches.**
+**A full-stack SaaS application for donor management at small nonprofits — live in production at [donortrackapp.com](https://www.donortrackapp.com)**
 
-DonorTrack is a comprehensive web application designed to help small organizations track donations, manage donor relationships, generate reports, and create IRS-compliant tax letters.
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React_19-20232A?style=flat&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL_18-316192?style=flat&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma_7-2D3748?style=flat&logo=prisma&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=flat&logo=stripe&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat&logo=railway&logoColor=white)
 
-## Features
+---
 
-### Core Features
-- **Donor Management**: Track donor information, contact details, and giving history
-- **Donation Tracking**: Record and categorize donations with flexible filtering
-- **Fund Management**: Organize donations by funds and campaigns
-- **Reporting**: Generate summary reports, fund reports, and top donor lists
-- **Tax Letters**: Create IRS-compliant year-end tax receipts with one click
-- **Email Integration**: Send tax letters directly to donors via email
-- **Data Export**: Export data to CSV and PDF formats
-- **Batch Operations**: Import donors via CSV, batch generate tax letters
+## Overview
 
-### Security
-- JWT-based authentication
-- Rate limiting on API endpoints
-- Input validation and sanitization
-- SQL injection protection via Prisma ORM
-- Secure password hashing with bcrypt
-- HTTPS recommended for production
+DonorTrack is a multi-tenant SaaS product designed for small nonprofits and churches to replace spreadsheets. Organizations sign up, manage their donors and donations, generate IRS-compliant tax letters, and export reports — all within an isolated, secure account.
+
+The app handles the full SaaS lifecycle: free trial → Stripe subscription → active account → cancellation, with automated transactional emails and webhook-driven subscription state at each step.
+
+**Live:** [donortrackapp.com](https://www.donortrackapp.com)
+
+---
+
+## Technical Highlights
+
+- **Multi-tenant architecture** — every organization's data is fully isolated via foreign key scoping at the database level
+- **Stripe billing integration** — checkout sessions, subscription lifecycle webhooks (`checkout.session.completed`, `customer.subscription.deleted`), webhook signature verification with raw body parsing
+- **Transactional email pipeline** — welcome, purchase confirmation, cancellation confirmation, and trial reminder emails via Resend, with a `node-cron` daily job that checks trial expirations and sends 3-day and 1-day reminders
+- **JWT authentication** — stateless auth with `bcrypt` password hashing, token expiry, and middleware-enforced route protection
+- **CSV import/export** — bulk import donors and donations with validation, error reporting, and donor matching by email; export any dataset to CSV
+- **PDF generation** — IRS-compliant year-end tax letters generated server-side with PDFKit, downloadable individually or as a batch ZIP
+- **Admin panel** — internal management dashboard protected by email-gated middleware; view all users, extend trials, activate/cancel accounts, manually verify emails
+- **Sentry error monitoring** — integrated on both frontend and backend with environment-aware initialization
+- **Rate limiting** — API-level rate limiting on all routes to prevent abuse
+- **SEO** — sitemap.xml and robots.txt served statically, submitted to Google Search Console
+
+---
 
 ## Tech Stack
 
-### Backend
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: JWT
-- **PDF Generation**: PDFKit
-- **Email**: Nodemailer (SMTP)
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS v4, React Router, Recharts |
+| Backend | Node.js, Express 5, TypeScript |
+| Database | PostgreSQL 18 with Prisma 7 ORM |
+| Auth | JSON Web Tokens, bcrypt |
+| Payments | Stripe (Checkout, Subscriptions, Webhooks) |
+| Email | Resend, node-cron |
+| PDF | PDFKit |
+| CSV | csv-parse, csv-stringify (backend), PapaParse (frontend) |
+| Error Tracking | Sentry |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Railway |
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Routing**: React Router
-- **Styling**: Tailwind CSS
-- **HTTP Client**: Axios
-- **Forms**: React Hook Form
-- **Notifications**: React Hot Toast
+---
 
-## Getting Started
+## Architecture
 
-### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL 14+
-- Git
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd DonorTrack
+```
+┌─────────────────────────────────────────────────────┐
+│                     Vercel (CDN)                     │
+│          React SPA + Static Assets                   │
+│          /api/* → proxied to Railway                 │
+└────────────────────────┬────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────┐
+│                  Railway (Backend)                   │
+│              Express 5 + TypeScript                  │
+│         Prisma ORM → PostgreSQL 18                   │
+│         node-cron (trial reminder jobs)              │
+└────────────────────────┬────────────────────────────┘
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+     ┌─────────────┐      ┌─────────────────┐
+     │  PostgreSQL  │      │  Stripe / Resend │
+     │  (Railway)   │      │  (External APIs) │
+     └─────────────┘      └─────────────────┘
 ```
 
-2. **Setup Backend**
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your database credentials
-npx prisma migrate deploy
-npx prisma generate
-npm run dev
-```
+---
 
-3. **Setup Frontend**
-```bash
-cd frontend
-npm install
-cp .env.example .env
-# Edit .env with your API URL
-npm run dev
-```
+## Features
 
-4. **Access the application**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+### Donor & Donation Management
+- Full CRUD for donors with type classification (Individual, Family, Business, Foundation), tags, and notes
+- Donation tracking by fund, campaign, and payment method (check, cash, card, online, stock, other)
+- Batch donation entry mode for high-volume data entry
+- Advanced filtering by date range, fund, donor type, and tags
 
-### Environment Variables
+### Reporting & Export
+- Dashboard with live stats, giving trends chart, and recent donations feed
+- Date range presets (this week, last month, quarter, year-to-date, all time, custom)
+- Summary, fund breakdown, and top donor reports — exportable to CSV and PDF
+- Bulk donor and donation CSV export
 
-**Backend (.env)**
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/donortrack"
-JWT_SECRET="your-secret-key-min-32-characters"
-JWT_EXPIRES_IN="7d"
-PORT=3000
-NODE_ENV=development
-FRONTEND_URL="http://localhost:5173"
+### Tax Letters
+- One-click IRS-compliant year-end tax letter generation for all donors
+- Batch download as ZIP or send individually via email
+- Per-letter sent/unsent tracking
 
-# Email (Optional - for sending tax letters)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-email@gmail.com
-SMTP_FROM_NAME="Your Organization"
-```
+### SaaS Billing
+- 14-day free trial (enforced server-side, not just frontend)
+- Three subscription tiers (Starter $29/mo, Growth $59/mo, Plus $99/mo)
+- Stripe Checkout for payment, webhook-driven account activation
+- Graceful cancellation flow with access retention until period end
 
-**Frontend (.env)**
-```env
-VITE_API_URL=http://localhost:3000
-```
-
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed production deployment instructions.
-
-### Quick Production Checklist
-- [ ] Change JWT_SECRET to a secure random string (32+ characters)
-- [ ] Set NODE_ENV=production
-- [ ] Use PostgreSQL with SSL
-- [ ] Configure SMTP for email sending
-- [ ] Set up HTTPS with SSL certificate
-- [ ] Configure CORS for your production domain
-- [ ] Set up database backups
-- [ ] Configure monitoring and error tracking
-
-## Development
-
-### Running Tests
-```bash
-# Backend
-cd backend
-npm test
-
-# Frontend
-cd frontend
-npm test
-```
-
-### Database Migrations
-```bash
-cd backend
-
-# Create a new migration
-npx prisma migrate dev --name description_of_change
-
-# Apply migrations
-npx prisma migrate deploy
-
-# Reset database (development only)
-npx prisma migrate reset
-```
-
-### Code Quality
-```bash
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-```
+---
 
 ## Project Structure
 
 ```
 DonorTrack/
 ├── backend/
-│   ├── prisma/           # Database schema and migrations
+│   ├── prisma/
+│   │   └── schema.prisma       # DB schema (User, Organization, Donor, Donation, Fund, TaxLetter, TrialUsed)
 │   ├── src/
-│   │   ├── config/       # Configuration files
-│   │   ├── middleware/   # Express middleware
-│   │   ├── routes/       # API routes
-│   │   ├── utils/        # Utility functions
-│   │   ├── app.ts        # Express app setup
-│   │   └── server.ts     # Server entry point
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── hooks/        # Custom React hooks
-│   │   ├── lib/          # Libraries and utilities
-│   │   ├── pages/        # Page components
-│   │   ├── types/        # TypeScript types
-│   │   └── App.tsx       # Main app component
-│   └── package.json
-├── DEPLOYMENT.md         # Deployment guide
-└── README.md            # This file
+│   │   ├── config/             # Env validation
+│   │   ├── middleware/         # Auth, rate limiting
+│   │   ├── routes/             # donors, donations, funds, reports, tax-letters, stripe, admin, auth
+│   │   ├── utils/              # Email, PDF generation
+│   │   ├── app.ts              # Express setup
+│   │   ├── prisma.ts           # Prisma client with pg adapter
+│   │   └── server.ts           # Entry point + cron jobs
+│   └── prisma.config.ts        # Prisma 7 datasource config
+└── frontend/
+    ├── public/
+    │   ├── sitemap.xml
+    │   └── robots.txt
+    └── src/
+        ├── components/         # Shared UI components
+        ├── hooks/              # usePageTitle, useAuth
+        ├── lib/                # Axios instance, helpers
+        ├── pages/              # Dashboard, Donors, Donations, Reports, TaxLetters, Settings, Admin, Auth
+        └── App.tsx             # Routes + auth guard
 ```
 
-## API Documentation
+---
 
-### Authentication
-- `POST /api/auth/register` - Register new organization
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user
+## Local Development
 
-### Donors
-- `GET /api/donors` - List donors (with pagination & filters)
-- `POST /api/donors` - Create donor
-- `GET /api/donors/:id` - Get donor details
-- `PUT /api/donors/:id` - Update donor
-- `DELETE /api/donors/:id` - Delete donor
-- `POST /api/donors/import` - Import donors from CSV
-- `GET /api/donors/export` - Export donors to CSV
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
 
-### Donations
-- `GET /api/donations` - List donations
-- `POST /api/donations` - Create donation
-- `PUT /api/donations/:id` - Update donation
-- `DELETE /api/donations/:id` - Soft delete donation
+### Setup
 
-### Tax Letters
-- `POST /api/tax-letters/generate` - Generate tax letters for a year
-- `GET /api/tax-letters/:id/pdf` - Download individual PDF
-- `GET /api/tax-letters/batch/zip` - Download batch as ZIP
-- `POST /api/tax-letters/:id/send-email` - Email letter to donor
-- `PATCH /api/tax-letters/:id/mark-sent` - Mark as sent
-- `PATCH /api/tax-letters/:id/mark-unsent` - Mark as not sent
+```bash
+# Clone
+git clone https://github.com/jacobotero/DonorTrack.git
+cd DonorTrack
 
-### Reports
-- `GET /api/reports/summary` - Summary report (PDF/CSV)
-- `GET /api/reports/funds` - Fund breakdown report
-- `GET /api/reports/top-donors` - Top donors report
+# Backend
+cd backend
+npm install
+cp .env.example .env       # fill in DATABASE_URL, JWT_SECRET, etc.
+npx prisma db push
+npm run dev                # http://localhost:3000
 
-## License
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev                # http://localhost:5173
+```
 
-MIT License - See LICENSE file for details
+### Key Environment Variables (Backend)
 
-## Support
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/donortrack
+JWT_SECRET=your-secret-key-min-32-chars
+FRONTEND_URL=http://localhost:5173
+RESEND_API_KEY=re_...
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
 
-For issues, questions, or contributions, please visit the GitHub repository.
+---
 
-## Acknowledgments
+## Deployment
 
-Built with modern web technologies to serve small nonprofits and churches.
+- **Frontend** — push to `main`, Vercel auto-deploys
+- **Backend** — push to `main`, Railway auto-deploys via Dockerfile; runs `prisma db push` on container start
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full production setup.
