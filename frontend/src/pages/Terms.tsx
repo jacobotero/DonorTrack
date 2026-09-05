@@ -65,25 +65,17 @@ export default function Terms() {
             <p>You must be at least 18 years old and have the authority to bind your organization to these Terms.</p>
           </Section>
 
-          <Section title="3. Free Trial">
-            <p>New accounts receive a 14-day free trial with full access to all features. No credit card is required to start a trial. At the end of the trial period, you must subscribe to a paid plan to continue using the Service.</p>
-            <p>Free trials are limited to one per email address. Creating multiple accounts to extend trial access is a violation of these Terms.</p>
+          <Section title="3. Free to Use">
+            <p>DonorTrack is free to use. There are no paid plans, no subscriptions, and no payment information is ever collected.</p>
           </Section>
 
-          <Section title="4. Subscriptions and Billing">
-            <p>Paid subscriptions are billed monthly in advance. All payments are processed securely by Stripe. By subscribing, you authorize us to charge your payment method on a recurring monthly basis.</p>
-            <p><strong className="text-gray-800 dark:text-gray-200">Cancellation:</strong> You may cancel your subscription at any time from the Settings page. Cancellation takes effect at the end of your current billing period. We do not provide prorated refunds for partial months.</p>
-            <p><strong className="text-gray-800 dark:text-gray-200">Price changes:</strong> We will notify you at least 30 days in advance of any price changes. Continued use of the Service after a price change takes effect constitutes acceptance of the new pricing.</p>
-            <p><strong className="text-gray-800 dark:text-gray-200">Failed payments:</strong> If a payment fails, we may suspend your account until payment is resolved. We will notify you by email.</p>
-          </Section>
-
-          <Section title="5. Your Data">
+          <Section title="4. Your Data">
             <p>You retain full ownership of all donor records, donation data, and other content you enter into the Service. We do not claim any ownership rights over your data.</p>
             <p>You grant us a limited license to store, process, and display your data solely for the purpose of providing the Service to you.</p>
             <p>You are responsible for ensuring that your use of donor data complies with all applicable privacy laws and that you have obtained any necessary consent from your donors.</p>
           </Section>
 
-          <Section title="6. Acceptable Use">
+          <Section title="5. Acceptable Use">
             <p>You agree not to use the Service to:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Violate any applicable law or regulation</li>
@@ -95,40 +87,40 @@ export default function Terms() {
             </ul>
           </Section>
 
-          <Section title="7. Tax Letter Disclaimer">
+          <Section title="6. Tax Letter Disclaimer">
             <p>DonorTrack generates tax acknowledgment letters based on the donation data you enter. We are not tax or legal professionals. The letters are provided as a convenience tool and should be reviewed for accuracy before distribution.</p>
             <p>You are responsible for ensuring that your tax letters comply with IRS requirements and any other applicable regulations. We recommend consulting a tax professional for guidance specific to your organization.</p>
           </Section>
 
-          <Section title="8. Intellectual Property">
+          <Section title="7. Intellectual Property">
             <p>The Service, including its design, code, and content (excluding your data), is owned by DonorTrack and protected by intellectual property laws. You may not copy, modify, distribute, or create derivative works based on the Service without our written permission.</p>
           </Section>
 
-          <Section title="9. Termination">
-            <p>We may suspend or terminate your account at any time for violation of these Terms, non-payment, or other conduct we determine to be harmful to the Service or other users.</p>
+          <Section title="8. Termination">
+            <p>We may suspend or terminate your account at any time for violation of these Terms or other conduct we determine to be harmful to the Service or other users.</p>
             <p>Upon termination, you may request an export of your data within 30 days. After that period, we may permanently delete your data.</p>
             <p>You may delete your account at any time from the Settings page. Deletion is permanent and irreversible.</p>
           </Section>
 
-          <Section title="10. Disclaimer of Warranties">
+          <Section title="9. Disclaimer of Warranties">
             <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.</p>
             <p>We do not warrant that the Service will be uninterrupted, error-free, or completely secure. We are not responsible for any loss of data due to outages or technical failures, though we make reasonable efforts to prevent such events.</p>
           </Section>
 
-          <Section title="11. Limitation of Liability">
+          <Section title="10. Limitation of Liability">
             <p>TO THE FULLEST EXTENT PERMITTED BY LAW, DONORTRACK SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF DATA, LOSS OF REVENUE, OR LOSS OF GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF THE SERVICE.</p>
-            <p>OUR TOTAL LIABILITY TO YOU FOR ANY CLAIMS ARISING FROM THESE TERMS OR YOUR USE OF THE SERVICE SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE THREE MONTHS PRECEDING THE CLAIM.</p>
+            <p>BECAUSE THE SERVICE IS PROVIDED FREE OF CHARGE, OUR TOTAL LIABILITY TO YOU FOR ANY CLAIMS ARISING FROM THESE TERMS OR YOUR USE OF THE SERVICE SHALL NOT EXCEED $100.</p>
           </Section>
 
-          <Section title="12. Governing Law">
+          <Section title="11. Governing Law">
             <p>These Terms are governed by and construed in accordance with the laws of the United States, without regard to conflict of law principles. Any disputes arising from these Terms shall be resolved through binding arbitration, except that either party may seek injunctive relief in a court of competent jurisdiction.</p>
           </Section>
 
-          <Section title="13. Changes to These Terms">
+          <Section title="12. Changes to These Terms">
             <p>We may update these Terms from time to time. We will notify you of material changes by email or through the Service at least 14 days before they take effect. Your continued use of the Service after changes take effect constitutes your acceptance of the updated Terms.</p>
           </Section>
 
-          <Section title="14. Contact Us">
+          <Section title="13. Contact Us">
             <p>If you have questions about these Terms, please contact us at:</p>
             <p>
               <a href="mailto:donortrackapp@gmail.com" className="text-emerald-600 hover:underline">donortrackapp@gmail.com</a>

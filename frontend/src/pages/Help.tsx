@@ -77,7 +77,7 @@ const navSections = [
   { id: "tax-letters", label: "Tax Letters" },
   { id: "reports", label: "Reports" },
   { id: "csv", label: "CSV Import & Export" },
-  { id: "billing", label: "Billing & Plans" },
+  { id: "billing", label: "Pricing" },
   { id: "faq", label: "FAQ" },
 ];
 
@@ -151,7 +151,7 @@ export default function Help() {
             <SectionBlock icon={BookOpen} title="Getting Started">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Setting up your account</h3>
-                <Step number={1} title="Create your account" description="Register with your email and organization name. You'll get a 14-day free trial with full access to all features." />
+                <Step number={1} title="Create your account" description="Register with your email and organization name. You'll get full access to every feature immediately, free." />
                 <Step number={2} title="Verify your email" description="Click the link in the verification email we send you. This unlocks your dashboard." />
                 <Step number={3} title="Fill in your organization profile" description="Go to Settings → Organization Profile and add your address, EIN, and logo. This information appears on tax letters." />
                 <Step number={4} title="Add your first donors" description="Go to Donors → Add Donor, or import a CSV file if you have an existing list." />
@@ -259,31 +259,10 @@ export default function Help() {
 
           {/* Billing */}
           <div id="billing" className="scroll-mt-20">
-            <SectionBlock icon={CreditCard} title="Billing & Plans">
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-3">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Free trial</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Every new account gets a 14-day free trial with full access to all features including tax letter generation. No credit card required to start. A countdown timer in the sidebar shows how much trial time remains.</p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-3">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Plans</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-700">
-                    <span className="font-medium text-gray-900 dark:text-white">Starter</span>
-                    <span className="text-gray-600 dark:text-gray-400">Donors, donations, basic reports</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-700">
-                    <span className="font-medium text-gray-900 dark:text-white">Growth</span>
-                    <span className="text-gray-600 dark:text-gray-400">Everything + tax letter generation</span>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="font-medium text-gray-900 dark:text-white">Plus</span>
-                    <span className="text-gray-600 dark:text-gray-400">Everything + priority support</span>
-                  </div>
-                </div>
-              </div>
+            <SectionBlock icon={CreditCard} title="Pricing">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Cancellation</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">You can cancel your subscription at any time from Settings → Subscription. Your access continues until the end of your current billing period. Your data is preserved and you can resubscribe at any time.</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Free to use</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">DonorTrack is completely free. Every feature, including tax letter generation, is available to every account with no limits and no credit card required.</p>
               </div>
             </SectionBlock>
           </div>
@@ -322,7 +301,7 @@ export default function Help() {
                 },
                 {
                   q: "Is my data secure?",
-                  a: "Yes. All data is stored in an encrypted PostgreSQL database, all traffic is encrypted via HTTPS, and passwords are hashed with bcrypt. We never store payment card data — billing is handled entirely by Stripe."
+                  a: "Yes. All data is stored in an encrypted PostgreSQL database, all traffic is encrypted via HTTPS, and passwords are hashed with bcrypt. DonorTrack is free to use, so no payment information is ever collected or stored."
                 },
               ]} />
             </SectionBlock>

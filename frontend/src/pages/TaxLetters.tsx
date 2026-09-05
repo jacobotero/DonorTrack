@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePageTitle } from "../hooks/usePageTitle";
 import {
-  FileText, Download, Send, Calendar, CheckCircle, AlertCircle, Undo2, Lock,
+  FileText, Download, Send, Calendar, CheckCircle, AlertCircle, Undo2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../lib/api";
@@ -172,34 +172,6 @@ export default function TaxLetters() {
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Generate Tax Letters</h2>
 
-        {organization.subscriptionTier === "STARTER" ? (
-          <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-                <Lock className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unlock Tax Letter Generation</h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  Tax letter generation is available on the <strong>Growth</strong> and <strong>Plus</strong> plans. Upgrade your subscription to generate IRS-compliant tax letters for your donors automatically.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a href="/app/upgrade" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
-                    View Plans & Upgrade
-                  </a>
-                  <a href="/app/settings" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    View Current Plan
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-800">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <strong>Growth Plan ($59/mo)</strong> includes tax letters, 500 donors, and priority support.
-              </p>
-            </div>
-          </div>
-        ) : (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tax Year</label>
@@ -246,7 +218,6 @@ export default function TaxLetters() {
               </button>
             </div>
           </div>
-        )}
       </div>
 
       {/* Filter and Batch Actions */}

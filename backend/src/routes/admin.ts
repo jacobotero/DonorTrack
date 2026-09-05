@@ -21,21 +21,8 @@ function requireAdmin(req: Request, res: Response, next: () => void) {
 // GET /api/admin/stats
 router.get("/stats", authenticate, requireAdmin as any, async (_req: Request, res: Response) => {
   try {
-    const [total, trialing, active, canceled, orgs] = await Promise.all([
-      prisma.user.count(),
-      prisma.organization.count({ where: { subscriptionStatus: "TRIALING" } }),
-      prisma.organization.count({ where: { subscriptionStatus: "ACTIVE" } }),
-      prisma.organization.count({ where: { subscriptionStatus: "CANCELED" } }),
-      prisma.organization.findMany({
-        where: { subscriptionStatus: "ACTIVE" },
-        select: { subscriptionTier: true },
-      }),
-    ]);
-
-    const PLAN_PRICES: Record<string, number> = { STARTER: 29, GROWTH: 59, PLUS: 99 };
-    const mrr = orgs.reduce((sum, o) => sum + (PLAN_PRICES[o.subscriptionTier] || 0), 0);
-
-    res.json({ total, trialing, active, canceled, mrr });
+    const total = await prisma.user.count();
+    res.json({ total });
   } catch (error) {
     console.error("Admin stats error:", error);
     res.status(500).json({ error: "Failed to get stats" });
@@ -56,11 +43,6 @@ router.get("/users", authenticate, requireAdmin as any, async (_req: Request, re
           select: {
             id: true,
             name: true,
-            subscriptionStatus: true,
-            subscriptionTier: true,
-            trialEndsAt: true,
-            stripeCustomerId: true,
-            stripeSubscriptionId: true,
             _count: {
               select: { donors: true, donations: true },
             },
@@ -72,72 +54,6 @@ router.get("/users", authenticate, requireAdmin as any, async (_req: Request, re
   } catch (error) {
     console.error("Admin users error:", error);
     res.status(500).json({ error: "Failed to get users" });
-  }
-});
-
-// PATCH /api/admin/orgs/:orgId/extend-trial
-router.patch("/orgs/:orgId/extend-trial", authenticate, requireAdmin as any, async (req: Request, res: Response) => {
-  try {
-    const { orgId } = req.params;
-    const days = parseInt(req.body.days) || 14;
-
-    const org = await prisma.organization.findUnique({ where: { id: orgId } });
-    if (!org) { res.status(404).json({ error: "Org not found" }); return; }
-
-    const base = org.trialEndsAt && org.trialEndsAt > new Date() ? org.trialEndsAt : new Date();
-    const newTrialEnd = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
-
-    await prisma.organization.update({
-      where: { id: orgId },
-      data: {
-        trialEndsAt: newTrialEnd,
-        subscriptionStatus: "TRIALING",
-      },
-    });
-
-    res.json({ message: `Trial extended by ${days} days`, newTrialEnd });
-  } catch (error) {
-    console.error("Admin extend trial error:", error);
-    res.status(500).json({ error: "Failed to extend trial" });
-  }
-});
-
-// PATCH /api/admin/orgs/:orgId/activate
-router.patch("/orgs/:orgId/activate", authenticate, requireAdmin as any, async (req: Request, res: Response) => {
-  try {
-    const { orgId } = req.params;
-    const tier = req.body.tier || "PLUS";
-
-    await prisma.organization.update({
-      where: { id: orgId },
-      data: {
-        subscriptionStatus: "ACTIVE",
-        subscriptionTier: tier,
-        trialEndsAt: null,
-      },
-    });
-
-    res.json({ message: "Account activated" });
-  } catch (error) {
-    console.error("Admin activate error:", error);
-    res.status(500).json({ error: "Failed to activate account" });
-  }
-});
-
-// PATCH /api/admin/orgs/:orgId/cancel
-router.patch("/orgs/:orgId/cancel", authenticate, requireAdmin as any, async (req: Request, res: Response) => {
-  try {
-    const { orgId } = req.params;
-
-    await prisma.organization.update({
-      where: { id: orgId },
-      data: { subscriptionStatus: "CANCELED", stripeSubscriptionId: null },
-    });
-
-    res.json({ message: "Account canceled" });
-  } catch (error) {
-    console.error("Admin cancel error:", error);
-    res.status(500).json({ error: "Failed to cancel account" });
   }
 });
 
@@ -167,8 +83,6 @@ router.delete("/orgs/:orgId", authenticate, requireAdmin as any, async (req: Req
     });
     if (!org) { res.status(404).json({ error: "Org not found" }); return; }
 
-    // Delete trial_used record too
-    await prisma.trialUsed.deleteMany({ where: { email: org.user.email } });
     // Delete user cascades to org → donors, donations, funds, taxLetters
     await prisma.user.delete({ where: { id: org.userId } });
 

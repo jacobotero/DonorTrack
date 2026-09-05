@@ -64,7 +64,6 @@ export default function Settings() {
   const { logout, refreshUser } = useAuth();
   const { isDark, toggleDark } = useDarkMode();
   const [org, setOrg] = useState<Organization | null>(null);
-  const [trialTimeLeft, setTrialTimeLeft] = useState<string | null>(null);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,8 +71,6 @@ export default function Settings() {
   const [testingEmail, setTestingEmail] = useState(false);
   const [showSmtpPass, setShowSmtpPass] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("Gmail");
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [canceling, setCanceling] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [confirmDeleteFund, setConfirmDeleteFund] = useState<string | null>(null);
   const [deleteInput, setDeleteInput] = useState("");
@@ -130,20 +127,6 @@ export default function Settings() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    if (!org?.trialEndsAt || org.subscriptionStatus !== "TRIALING") return;
-    const calc = () => {
-      const diff = new Date(org.trialEndsAt!).getTime() - Date.now();
-      if (diff <= 0) { setTrialTimeLeft(null); return; }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      setTrialTimeLeft(days > 0 ? `${days} day${days !== 1 ? "s" : ""}, ${hours} hour${hours !== 1 ? "s" : ""}` : `${hours} hour${hours !== 1 ? "s" : ""}`);
-    };
-    calc();
-    const id = setInterval(calc, 60 * 1000);
-    return () => clearInterval(id);
-  }, [org]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,20 +210,6 @@ export default function Settings() {
       toast.success("Fund permanently deleted");
     } catch {
       toast.error("Failed to permanently delete fund");
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    setCanceling(true);
-    try {
-      await api.post("/stripe/cancel-subscription");
-      setShowCancelConfirm(false);
-      toast.success("Subscription canceled. You will be redirected shortly.");
-      setTimeout(() => { window.location.href = "/upgrade?subscription_canceled=true"; }, 1500);
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to cancel subscription");
-    } finally {
-      setCanceling(false);
     }
   };
 
@@ -502,94 +471,10 @@ export default function Settings() {
         </form>
       </div>
 
-      {/* Subscription Plan & Fund Management - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Subscription Plan */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subscription Plan</h2>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-              {org?.subscriptionStatus === "TRIALING" && "Free Trial"}
-              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && "Starter"}
-              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && "Growth"}
-              {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && "Plus"}
-            </span>
-            {org?.subscriptionStatus === "TRIALING" && (
-              <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-medium rounded-full">Full Access</span>
-            )}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && (
-              <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-full">100 Donors</span>
-            )}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && (
-              <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded-full">500 Donors</span>
-            )}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && (
-              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full">Unlimited</span>
-            )}
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {org?.subscriptionStatus === "TRIALING" && (trialTimeLeft ? `${trialTimeLeft} remaining · Full access to all features` : "Full access to all features")}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "STARTER" && "$29/month · All core features for small nonprofits"}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "GROWTH" && "$59/month · Advanced features including tax letter generation"}
-            {org?.subscriptionStatus !== "TRIALING" && org?.subscriptionTier === "PLUS" && "$99/month · Complete platform with unlimited donors"}
-          </p>
-
-          <div className="space-y-2">
-            <button
-              onClick={() => navigate("/app/upgrade")}
-              className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-            >
-              {org?.subscriptionStatus === "TRIALING" ? "Purchase a Subscription Plan" : "Change Subscription Plan"}
-            </button>
-            {org?.subscriptionStatus === "ACTIVE" && (
-              <>
-                {!showCancelConfirm ? (
-                  <button
-                    onClick={() => setShowCancelConfirm(true)}
-                    className="w-full px-4 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    Cancel Subscription
-                  </button>
-                ) : (
-                  <div className="border border-red-200 dark:border-red-800 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
-                    <p className="text-sm text-red-800 dark:text-red-300 font-medium mb-1">Are you sure?</p>
-                    <p className="text-xs text-red-700 dark:text-red-400 mb-3">
-                      Billing stops immediately and your account will be locked until you resubscribe. All your data is preserved.
-                    </p>
-                    <div className="flex gap-2">
-                      <button onClick={handleCancelSubscription} disabled={canceling} className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
-                        {canceling ? "Canceling..." : "Yes, cancel"}
-                      </button>
-                      <button onClick={() => setShowCancelConfirm(false)} className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Keep plan
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {org?.subscriptionStatus === "TRIALING" && (
-            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                You have full access to all features during your trial. Purchase a plan before your trial ends to keep access.
-              </p>
-            </div>
-          )}
-          {org?.subscriptionStatus === "ACTIVE" && org?.subscriptionTier === "STARTER" && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-sm text-blue-800 dark:text-blue-300">
-                <strong>Upgrade to Growth or Plus</strong> to unlock tax letter generation, manage more donors, and get priority support.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Fund Management */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Fund Management</h2>
-          <div className="flex gap-2 mb-4">
+      {/* Fund Management */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Fund Management</h2>
+        <div className="flex gap-2 mb-4">
             <input
               type="text"
               value={newFundName}
@@ -639,7 +524,6 @@ export default function Settings() {
             ))}
           </div>
         </div>
-      </div>
 
       {/* Danger Zone */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-900 p-6 mt-6">
@@ -662,7 +546,6 @@ export default function Settings() {
               <li>Your account and login</li>
               <li>All donors and donation records</li>
               <li>All reports, funds, and tax letters</li>
-              <li>Any active Stripe subscription</li>
             </ul>
             <p className="text-xs text-red-700 dark:text-red-400 mb-3 font-medium">Type <strong>DELETE</strong> to confirm:</p>
             <input

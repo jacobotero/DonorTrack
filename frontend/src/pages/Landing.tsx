@@ -104,10 +104,10 @@ export default function Landing() {
                 Features
               </a>
               <a
-                href="#pricing"
+                href="#free"
                 className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
               >
-                Pricing
+                Free to Use
               </a>
               <Link
                 to="/help"
@@ -288,145 +288,40 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Choose the plan that fits your organization. Start small and upgrade as you grow.
-            </p>
+      {/* Free to Use Section */}
+      <section id="free" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Completely Free to Use
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10">
+            Every feature, unlocked, for every organization. No plans, no limits, no credit card.
+          </p>
+
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-left">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>Unlimited donors and donations</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>All reports & exports</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>CSV import & batch entry</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>IRS-compliant tax letter generation</span>
+              </li>
+            </ul>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter Plan */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-8 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Starter</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Perfect for small organizations just getting started</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900 dark:text-white">$29</span>
-                <span className="text-gray-600 dark:text-gray-400">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Up to 100 donors</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Unlimited donations</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>All reports & exports</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>CSV import & batch entry</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Email support</span>
-                </li>
-              </ul>
-              <Link
-                to="/upgrade"
-                className="block w-full text-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Start Free Trial
-              </Link>
-            </div>
-
-            {/* Growth Plan - Highlighted */}
-            <div className="bg-emerald-600 rounded-xl border-2 border-emerald-600 p-8 relative shadow-xl transform md:scale-105">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">
-                Most Popular
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Growth</h3>
-              <p className="text-emerald-50 mb-6">For growing organizations with expanding donor bases</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-white">$59</span>
-                <span className="text-emerald-100">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-emerald-200 flex-shrink-0" />
-                  <span>Up to 500 donors</span>
-                </li>
-                <li className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-emerald-200 flex-shrink-0" />
-                  <span>Unlimited donations</span>
-                </li>
-                <li className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-emerald-200 flex-shrink-0" />
-                  <span>All reports & exports</span>
-                </li>
-                <li className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-emerald-200 flex-shrink-0" />
-                  <span>Tax letter generation</span>
-                </li>
-                <li className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-emerald-200 flex-shrink-0" />
-                  <span>Priority email support</span>
-                </li>
-              </ul>
-              <Link
-                to="/upgrade"
-                className="block w-full text-center px-6 py-3 bg-white text-emerald-600 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
-              >
-                Start Free Trial
-              </Link>
-            </div>
-
-            {/* Plus Plan */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-8 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Plus</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">For established organizations with large donor communities</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900 dark:text-white">$99</span>
-                <span className="text-gray-600 dark:text-gray-400">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Unlimited donors</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Unlimited donations</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>All reports & exports</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Tax letter generation</span>
-                </li>
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span>Priority support</span>
-                </li>
-              </ul>
-              <Link
-                to="/upgrade"
-                className="block w-full text-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Start Free Trial
-              </Link>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
-              All plans include a <strong>14-day free trial</strong> • No credit card required
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Cancel anytime • Annual plans save 20%
-            </p>
-          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-8">
+            No credit card required • Set up in minutes
+          </p>
         </div>
       </section>
 

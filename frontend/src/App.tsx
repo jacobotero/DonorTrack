@@ -14,8 +14,6 @@ import Donations from "./pages/Donations";
 import Reports from "./pages/Reports";
 import TaxLetters from "./pages/TaxLetters";
 import Settings from "./pages/Settings";
-import Upgrade from "./pages/Upgrade";
-import PaymentSuccess from "./pages/PaymentSuccess";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailPending from "./pages/VerifyEmailPending";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -40,8 +38,6 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/upgrade" element={<Upgrade />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -60,7 +56,6 @@ function App() {
               <Route path="tax-letters" element={<TaxLetters />} />
               <Route path="settings" element={<Settings />} />
               <Route path="support" element={<Support />} />
-              <Route path="upgrade" element={<Upgrade />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -9,7 +9,6 @@ import {
   LogOut,
   X,
   Menu,
-  Lock,
   Heart,
   LifeBuoy,
   BookOpen,
@@ -49,10 +48,6 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto min-h-0 p-4 space-y-1">
         {navItems.map((item) => {
-          const isRestricted =
-            item.label === "Tax Letters" &&
-            user?.organization?.subscriptionTier === "STARTER";
-
           return (
             <NavLink
               key={item.to}
@@ -69,9 +64,6 @@ export default function Sidebar() {
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               <span className="flex-1">{item.label}</span>
-              {isRestricted && (
-                <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-              )}
             </NavLink>
           );
         })}

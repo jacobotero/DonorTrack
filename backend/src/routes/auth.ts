@@ -12,26 +12,11 @@ import {
 } from "../validators/auth";
 import { authenticate } from "../middleware/auth";
 import { emailService } from "../utils/email";
-import { stripe } from "../config/stripe";
 
 const router = Router();
 
 function generateVerificationToken() {
   return randomBytes(32).toString("hex");
-}
-
-/**
- * Normalize an email address for trial-abuse detection.
- * Strips plus-addressing (user+tag@gmail.com → user@gmail.com) so that
- * someone cannot create unlimited trials by varying the alias.
- */
-function normalizeEmailForTrial(email: string): string {
-  const lower = email.toLowerCase();
-  const atIndex = lower.lastIndexOf("@");
-  if (atIndex === -1) return lower;
-  const local = lower.slice(0, atIndex).split("+")[0];
-  const domain = lower.slice(atIndex + 1);
-  return `${local}@${domain}`;
 }
 
 async function sendVerificationEmail(email: string, token: string) {
@@ -52,12 +37,9 @@ async function sendVerificationEmail(email: string, token: string) {
   });
 }
 
-async function sendWelcomeEmail(email: string, orgName: string, trialEndsAt: Date | null) {
+async function sendWelcomeEmail(email: string, orgName: string) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
   const appUrl = `${frontendUrl}/app`;
-  const trialLine = trialEndsAt
-    ? `<p style="color:#6b7280;font-size:14px;">Your free trial runs until <strong>${trialEndsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>. No credit card needed until then.</p>`
-    : "";
 
   await emailService.sendEmail({
     to: email,
@@ -74,7 +56,6 @@ async function sendWelcomeEmail(email: string, orgName: string, trialEndsAt: Dat
           <li>Generate IRS-compliant tax letters</li>
           <li>Export reports for your board</li>
         </ul>
-        ${trialLine}
         <a href="${appUrl}" style="display:inline-block;background:#059669;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0;">Go to Dashboard</a>
         <p style="color:#6b7280;font-size:13px;margin-top:24px;">Thanks for choosing DonorTrack. We're glad to have you.</p>
       </div>
@@ -101,17 +82,6 @@ router.post(
 
       const passwordHash = await hashPassword(password);
 
-      // If this email has previously used a trial, don't grant a new one.
-      // normalizeEmail strips Gmail-style plus addressing (user+tag@gmail.com → user@gmail.com)
-      // so each inbox can only ever receive one free trial regardless of aliases.
-      const normalizedEmail = normalizeEmailForTrial(email);
-      const priorTrial = await prisma.trialUsed.findUnique({
-        where: { email: normalizedEmail },
-      });
-      const trialEndsAt = priorTrial
-        ? new Date(0) // already used — immediately expired
-        : (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d; })();
-
       const verificationToken = generateVerificationToken();
       const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -122,7 +92,7 @@ router.post(
           emailVerificationToken: verificationToken,
           emailVerificationExpiry: verificationExpiry,
           organization: {
-            create: { name: organizationName, trialEndsAt },
+            create: { name: organizationName },
           },
         },
         include: { organization: true },
@@ -136,11 +106,6 @@ router.post(
             { organizationId: user.organization.id, name: "Missions" },
           ],
         });
-      }
-
-      // Record that this email has used a trial (only on first registration)
-      if (!priorTrial) {
-        await prisma.trialUsed.create({ data: { email: normalizedEmail } });
       }
 
       // Non-blocking — registration succeeds even if email fails
@@ -158,7 +123,7 @@ router.post(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus, trialEndsAt: user.organization.trialEndsAt }
+            ? { id: user.organization.id, name: user.organization.name }
             : null,
         },
       });
@@ -202,7 +167,7 @@ router.post(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus, trialEndsAt: user.organization.trialEndsAt }
+            ? { id: user.organization.id, name: user.organization.name }
             : null,
         },
       });
@@ -235,7 +200,7 @@ router.get(
           email: user.email,
           emailVerified: user.emailVerified,
           organization: user.organization
-            ? { id: user.organization.id, name: user.organization.name, subscriptionTier: user.organization.subscriptionTier, subscriptionStatus: user.organization.subscriptionStatus, trialEndsAt: user.organization.trialEndsAt }
+            ? { id: user.organization.id, name: user.organization.name }
             : null,
         },
       });
@@ -282,7 +247,7 @@ router.get(
       // Send welcome email now that the address is confirmed
       const org = await prisma.organization.findFirst({ where: { userId: user.id } });
       if (org) {
-        sendWelcomeEmail(user.email, org.name, org.trialEndsAt).catch((err) => {
+        sendWelcomeEmail(user.email, org.name).catch((err) => {
           console.error("Failed to send welcome email:", err);
         });
       }
@@ -347,16 +312,6 @@ router.delete(
       if (!user) {
         res.status(404).json({ error: "User not found" });
         return;
-      }
-
-      // Cancel active Stripe subscription if exists
-      if (user.organization?.stripeSubscriptionId) {
-        try {
-          await stripe.subscriptions.cancel(user.organization.stripeSubscriptionId);
-        } catch (err) {
-          console.error("Failed to cancel Stripe subscription during account deletion:", err);
-          // Continue with deletion even if Stripe cancel fails
-        }
       }
 
       // Delete user — cascade deletes organization, donors, donations, funds, tax letters

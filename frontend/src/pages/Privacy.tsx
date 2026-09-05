@@ -54,7 +54,6 @@ export default function Privacy() {
             <p><strong className="text-gray-800 dark:text-gray-200">Account information:</strong> When you register, we collect your email address, password (stored as a secure hash), and your organization's name.</p>
             <p><strong className="text-gray-800 dark:text-gray-200">Organization profile:</strong> Information you optionally provide such as your organization's address, phone number, EIN, tax-exempt status, and logo.</p>
             <p><strong className="text-gray-800 dark:text-gray-200">Donor and donation data:</strong> Names, contact information, addresses, giving history, and any other information you enter about your donors. This data belongs to you.</p>
-            <p><strong className="text-gray-800 dark:text-gray-200">Billing information:</strong> Payment processing is handled entirely by Stripe. We do not store credit card numbers or payment details on our servers. We receive and store a Stripe customer ID and subscription status.</p>
             <p><strong className="text-gray-800 dark:text-gray-200">Usage data:</strong> Basic server logs including IP addresses and request timestamps for security and debugging purposes.</p>
           </Section>
 
@@ -62,8 +61,8 @@ export default function Privacy() {
             <p>We use the information we collect to:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Provide, operate, and maintain the Service</li>
-              <li>Authenticate your account and process your subscription</li>
-              <li>Send transactional emails such as email verification, password reset, purchase confirmation, and trial reminders</li>
+              <li>Authenticate your account</li>
+              <li>Send transactional emails such as email verification and password reset</li>
               <li>Respond to support requests you submit</li>
               <li>Generate tax letters and reports on your behalf</li>
               <li>Detect and prevent fraud, abuse, or security incidents</li>
@@ -72,17 +71,16 @@ export default function Privacy() {
           </Section>
 
           <Section title="3. Data Storage and Security">
-            <p>Your data is stored in a PostgreSQL database hosted on Railway. All data is transmitted over HTTPS/TLS encryption. Passwords are hashed using bcrypt and are never stored in plain text.</p>
+            <p>Your data is stored in a PostgreSQL database hosted by Neon, with the application itself running on Amazon Web Services (AWS). All data is transmitted over HTTPS/TLS encryption. Passwords are hashed using bcrypt and are never stored in plain text.</p>
             <p>We implement reasonable technical and organizational measures to protect your information. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
           </Section>
 
           <Section title="4. Third-Party Services">
             <p>We use the following third-party services to operate DonorTrack:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong className="text-gray-800 dark:text-gray-200">Stripe</strong> — payment processing and subscription management. Subject to <a href="https://stripe.com/privacy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Stripe's Privacy Policy</a>.</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Resend</strong> — transactional email delivery. Subject to <a href="https://resend.com/legal/privacy-policy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Resend's Privacy Policy</a>.</li>
-              <li><strong className="text-gray-800 dark:text-gray-200">Railway</strong> — cloud infrastructure and database hosting. Subject to <a href="https://railway.com/legal/privacy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Railway's Privacy Policy</a>.</li>
-              <li><strong className="text-gray-800 dark:text-gray-200">Vercel</strong> — frontend hosting. Subject to <a href="https://vercel.com/legal/privacy-policy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Vercel's Privacy Policy</a>.</li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Amazon Web Services (AWS)</strong> — application hosting and infrastructure. Subject to <a href="https://aws.amazon.com/privacy/" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">AWS's Privacy Notice</a>.</li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Neon</strong> — database hosting. Subject to <a href="https://neon.tech/privacy-policy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Neon's Privacy Policy</a>.</li>
             </ul>
           </Section>
 
@@ -97,7 +95,7 @@ export default function Privacy() {
           </Section>
 
           <Section title="6. Data Retention">
-            <p>We retain your account and organizational data for as long as your account is active. If you request account deletion, we will permanently delete your data within 30 days, except where we are required to retain certain information for legal or financial compliance purposes (such as billing records).</p>
+            <p>We retain your account and organizational data for as long as your account is active. If you request account deletion, we will permanently delete your data within 30 days, except where we are required to retain certain information for legal compliance purposes.</p>
           </Section>
 
           <Section title="7. Cookies">

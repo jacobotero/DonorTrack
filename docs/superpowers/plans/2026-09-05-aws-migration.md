@@ -20,8 +20,22 @@
 - CDK is Python, in a new `infra/` directory at the repo root, matching the portfolio site's own stack for a consistent toolchain.
 - GitHub Actions deploys via OIDC role assumption — no long-lived AWS access keys stored as repo secrets.
 - DNS stays on Cloudflare. No record changes are automated; they're a documented manual step.
-- New backend tests use Vitest. Do not retrofit tests onto the pre-existing Express app's untested routes — only the new migration code (the Lambda wrapper, the extracted cron handler, and the Stripe webhook raw-body path) gets covered.
+- New backend tests use Vitest. Do not retrofit tests onto the pre-existing Express app's untested routes — only new migration code gets covered.
 - `backend/src/server.ts` keeps working for local dev (`npm run dev`) exactly as it does today; it is not the Lambda entry point.
+
+## Amendment (mid-migration): Stripe/paywall removed; Lambda is a container image, not a zip
+
+Two changes made after Tasks 1-9 were already underway, both reflected in the task text below and superseding anything in Tasks 10-14 that still refers to the old state:
+
+1. **Stripe and the whole trial/subscription system were removed from the application itself** (a separate, explicitly-approved change — DonorTrack is now free to use, no paywall, no plans). This means:
+   - `backend/src/cron.ts` (Task 2's extraction) no longer exists — there's no more trial-reminder job to run, so it was deleted rather than deployed.
+   - **Task 10 (cron Lambda + EventBridge rule) is void.** There is nothing left to schedule. Do not execute it if resuming this plan from a stale checkpoint.
+   - `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` are gone from the SSM parameter list, the Lambda's environment variables, and Task 14's runbook.
+2. **The Lambda is a container image (`DockerImageFunction`), not a zip package (`Function` + `Code.from_asset`).** Reason: `@prisma/client` (v7.4.0) unconditionally bundles WASM query compilers for every database Prisma supports (Postgres, MySQL, SQLite, SQL Server, CockroachDB) — roughly 45MB+ on its own, regardless of `schema.prisma`'s `binaryTargets` setting, which turned out to have no effect on this at all (Prisma's WASM-based architecture doesn't use the native per-platform binaries that setting used to control). A production-only zip build still measured 386MB — over Lambda's 250MB *unzipped* limit for zip packages. Container images have a 10GB limit instead, which this comfortably fits.
+   - `backend/Dockerfile` (multi-stage: full deps to compile TypeScript, then a production-only-deps final stage) replaces the old `build:lambda` npm script and the `dist-lambda`/`dist-lambda-install` two-step copy dance entirely — Docker's own layer caching handles the prod/dev dependency split cleanly, which also sidesteps the disk-space fragility the manual copy approach had.
+   - `backend/package.json`'s `build:lambda` script was removed — there's nothing left to build outside of `cdk deploy` itself, which builds the Docker image as part of asset bundling.
+   - **This needs Docker.** `cdk deploy`/`cdk synth` on a machine without Docker installed will fail when it reaches the `DockerImageFunction`'s asset bundling step. GitHub Actions' `ubuntu-latest` runners have Docker pre-installed, so CI is unaffected. For *local* CDK unit tests specifically (`pytest` in `infra/`), the test file sets the `aws:cdk:bundling-stacks` context to an empty list — CDK's documented escape hatch to skip asset bundling (Docker build included) entirely, so `pytest` passes with or without Docker installed locally. Real `cdk deploy` still needs real Docker, on whatever machine/CI runs it.
+   - Minor ongoing-cost note: CDK pushes the built image to its own bootstrap-managed ECR asset repository. A single image here is small enough (comfortably under ECR's Always Free 500MB/month tier) that this doesn't cost anything at the traffic/deploy-frequency this app sees, but if deploys become very frequent over a long period, an ECR lifecycle policy trimming old image versions would be a reasonable future hardening — not needed now.
 
 ---
 
@@ -1027,7 +1041,14 @@ git commit -m "Add the Lambda + API Gateway backend stack"
 
 ---
 
-### Task 10: Cron Lambda + EventBridge rule
+### Task 10: Cron Lambda + EventBridge rule — VOID, do not execute
+
+See the Amendment above: Stripe/trials were removed from the app entirely, so there is no more trial-reminder job to schedule. `backend/src/cron.ts` was deleted rather than deployed. Skip straight to Task 11.
+
+<details>
+<summary>Original task text (kept for history only)</summary>
+
+
 
 **Files:**
 - Modify: `infra/infra/infra_stack.py`
@@ -1118,6 +1139,9 @@ Expected: succeeds.
 git add infra/infra/infra_stack.py infra/tests/unit/test_infra_stack.py
 git commit -m "Add the cron Lambda and its daily EventBridge schedule"
 ```
+
+
+</details>
 
 ---
 
@@ -1397,7 +1421,14 @@ git commit -m "Load secrets from SSM at Lambda cold start; make the Prisma clien
 
 ---
 
-### Task 12: Backend Lambda build step (produces `backend/dist-lambda/`)
+### Task 12: Backend Lambda build step — SUPERSEDED by the Docker pivot
+
+See the Amendment above: the Lambda is now a container image built from `backend/Dockerfile` as part of `cdk deploy`'s own asset bundling. There is no separate `dist-lambda`/`build:lambda` step anymore — Docker's own multi-stage build handles compiling TypeScript and installing production-only dependencies. `backend/package.json`'s `build:lambda` script was removed. Nothing here needs executing.
+
+<details>
+<summary>Original task text (kept for history only)</summary>
+
+
 
 **Files:**
 - Modify: `backend/package.json` (add a `build:lambda` script)
@@ -1410,10 +1441,12 @@ git commit -m "Load secrets from SSM at Lambda cold start; make the Prisma clien
 In `backend/package.json`'s `"scripts"` block:
 
 ```json
-"build:lambda": "rm -rf dist-lambda && tsc --outDir dist-lambda && cp -r node_modules dist-lambda/node_modules && cp package.json dist-lambda/package.json"
+"build:lambda": "rm -rf dist-lambda dist-lambda-install && tsc --outDir dist-lambda && mkdir dist-lambda-install && cp package.json package-lock.json dist-lambda-install/ && cd dist-lambda-install && npm ci --omit=dev && PRISMA_CLI_BINARY_TARGETS=rhel-openssl-3.0.x npx prisma generate --schema=../prisma/schema.prisma && cd .. && cp -r dist-lambda-install/node_modules dist-lambda/node_modules && cp package.json dist-lambda/package.json && rm -rf dist-lambda-install"
 ```
 
-(On Windows locally, `rm -rf` isn't a shell built-in — this script is written for the GitHub Actions Ubuntu runner, which has it natively. Running it locally on Windows isn't required by this plan; Step 3 below verifies it a different way.)
+**Why not just `cp -r node_modules dist-lambda/node_modules` (the obvious approach)?** Measured directly: copying the full dev-oriented `node_modules` produced a 518MB package — over double Lambda's 250MB unzipped deployment limit, which makes `cdk deploy` fail outright, not just run slower. The bloat is devDependencies that have no business in a deployed Lambda (the `prisma` CLI, `typescript`, and a large chunk pulled in transitively by Vitest) plus an unnecessary second Prisma engine binary for whatever platform ran `npm install` locally. The corrected script installs into an isolated `dist-lambda-install/` directory with `npm ci --omit=dev` (production dependencies only, from the lockfile) and regenerates the Prisma client scoped to only the `rhel-openssl-3.0.x` engine via `PRISMA_CLI_BINARY_TARGETS` — schema.prisma's own `binaryTargets = ["native", "rhel-openssl-3.0.x"]` is unchanged and still serves local dev's own separate `prisma generate` runs.
+
+(On Windows locally, `rm -rf`/`cp -r`/`&&` chains work fine in Git Bash, which is what this environment's shell tool actually runs — no WSL needed here.)
 
 - [ ] **Step 2: Build the deployment package once, from a machine/shell with `rm`/`cp` (or WSL/Git Bash)**
 
@@ -1428,9 +1461,10 @@ npm run build:lambda
 ```bash
 ls backend/dist-lambda/lambda.js backend/dist-lambda/cron.js
 ls backend/dist-lambda/node_modules/.prisma/client/ | grep rhel
+du -sh backend/dist-lambda
 ```
 
-Expected: both compiled entry files exist, and the `rhel-openssl-3.0.x` Prisma engine binary (from Task 5) is present in the bundled `node_modules`.
+Expected: both compiled entry files exist, the `rhel-openssl-3.0.x` Prisma engine binary (from Task 5) is present in the bundled `node_modules`, and the total size is well under Lambda's 250MB unzipped limit (a clean production-only install with a single Prisma engine target should land well under 200MB for this app — if it's still close to or over the limit, something is still pulling in unnecessary weight and needs investigating before moving on).
 
 - [ ] **Step 4: Re-point CDK's placeholder if Task 9 created one**
 
@@ -1454,6 +1488,9 @@ dist-lambda/
 git add backend/package.json backend/.gitignore
 git commit -m "Add the Lambda deployment build script"
 ```
+
+
+</details>
 
 ---
 
@@ -1647,13 +1684,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
-      - name: Build backend Lambda package
+      - name: Test backend
         working-directory: backend
         run: |
           npm ci
           npx prisma generate
           npm test
-          npm run build:lambda
+
+      - uses: docker/setup-buildx-action@v3
 
       - uses: actions/setup-python@v5
         with:
@@ -1688,7 +1726,7 @@ git commit -m "Add GitHub OIDC deploy role and CI workflows"
 
 ---
 
-### Task 14: Manual runbook — first real deploy, secrets, DNS, Stripe
+### Task 14: Manual runbook — first real deploy, secrets, DNS
 
 Everything up to here is code. This task is the actual cutover — a checklist of manual actions, run once.
 
@@ -1701,8 +1739,10 @@ cdk bootstrap
 
 - [ ] **Step 2: Deploy the stack for the first time, manually, to get real resource names/ARNs**
 
+Docker must be running locally for this (the Lambda is a container image — see the Amendment above):
+
 ```bash
-cd backend && npx prisma generate && npm run build:lambda && cd ../infra
+cd infra
 cdk deploy --require-approval never
 ```
 
@@ -1717,13 +1757,11 @@ In the repo's GitHub Settings → Secrets and variables → Actions → Variable
 
 - [ ] **Step 4: Populate the real secrets in SSM**
 
-Run once per parameter, filling in real values (the Neon pooled connection string from Task 6, and the existing Stripe/Resend/Sentry credentials from wherever they're currently recorded — the dead Railway project's environment variables, if still visible in the Railway dashboard, or wherever else they were originally generated):
+Run once per parameter, filling in real values (the Neon pooled connection string from Task 6, and the existing Resend/Sentry credentials from wherever they're currently recorded — the dead Railway project's environment variables, if still visible in the Railway dashboard, or wherever else they were originally generated):
 
 ```bash
 aws ssm put-parameter --name "/donortrack/database-url" --type SecureString --value "<neon pooled connection string>"
 aws ssm put-parameter --name "/donortrack/jwt-secret" --type SecureString --value "<a new random 32+ char secret — do not reuse the old one>"
-aws ssm put-parameter --name "/donortrack/stripe-secret-key" --type SecureString --value "<from Stripe dashboard>"
-aws ssm put-parameter --name "/donortrack/stripe-webhook-secret" --type SecureString --value "<set after Step 6 below>"
 aws ssm put-parameter --name "/donortrack/resend-api-key" --type SecureString --value "<from Resend dashboard>"
 aws ssm put-parameter --name "/donortrack/sentry-dsn" --type SecureString --value "<from Sentry project settings>"
 ```
@@ -1743,22 +1781,18 @@ aws cloudfront create-invalidation --distribution-id <DistributionId from Step 2
 CDK's output (or the CloudFront console) gives a domain like `d123abc.cloudfront.net`. Visit it and confirm the frontend loads. Then:
 - Sign up for a new test account through the UI, confirm it works end to end (this exercises the database connection, JWT auth, and Resend email).
 - Create a donor and a donation.
-- In the Stripe dashboard, add a new webhook endpoint pointed at `https://d123abc.cloudfront.net/api/stripe/webhook`, copy its signing secret, and re-run the `stripe-webhook-secret` `put-parameter` command from Step 4 with the real value. Send a test event from the Stripe dashboard's webhook testing tool and confirm it's accepted (check CloudWatch Logs for the API Lambda if unsure).
-- Manually invoke the cron Lambda once (`aws lambda invoke --function-name <CronFunction's name from the CDK/console> /tmp/out.json && cat /tmp/out.json`) and check CloudWatch Logs for `[cron] Running trial reminder check...` with no errors.
+- Generate a tax letter — every account has access to this now (no plan gating).
+- Check CloudWatch Logs for the API Lambda if anything looks off.
 
-- [ ] **Step 7: Update Stripe's webhook URL to the real domain**
-
-Once DNS (Step 8) is live, edit the webhook endpoint created in Step 6 to point at `https://www.donortrackapp.com/api/stripe/webhook` instead of the CloudFront domain (or just create it fresh at the real URL now and delete the temporary one — either works).
-
-- [ ] **Step 8: Cut over DNS in Cloudflare**
+- [ ] **Step 7: Cut over DNS in Cloudflare**
 
 In the Cloudflare dashboard for donortrackapp.com, update the `donortrackapp.com` and `www` DNS records to point at the CloudFront distribution's domain name (as a CNAME for `www`; the apex/root record may need Cloudflare's "CNAME flattening," which Cloudflare supports automatically for proxied apex records — if using an A/ALIAS record instead, use Cloudflare's flattening option rather than a raw IP, since CloudFront's IPs aren't static). If Cloudflare's proxy ("orange cloud") is on for these records, switch it to "DNS only" (grey cloud) for the CloudFront target, per the spec's reasoning (avoids double-proxying two CDNs).
 
-- [ ] **Step 9: Confirm the live domain**
+- [ ] **Step 8: Confirm the live domain**
 
 Visit `https://www.donortrackapp.com` and repeat the Step 6 smoke tests against the real domain.
 
-- [ ] **Step 10: Leave Vercel and the old Railway project alone for a few days as a fallback**
+- [ ] **Step 9: Leave Vercel and the old Railway project alone for a few days as a fallback**
 
 No action needed — they cost nothing extra to leave stopped/unused. Decommission both once satisfied the new stack is stable.
 

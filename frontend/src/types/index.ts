@@ -18,9 +18,6 @@ export type Organization = {
   ein?: string;
   taxExemptStatus?: string;
   logoUrl?: string;
-  subscriptionTier: "STARTER" | "GROWTH" | "PLUS";
-  subscriptionStatus: "TRIALING" | "ACTIVE" | "CANCELED";
-  trialEndsAt?: string;
   smtpHost?: string;
   smtpPort?: number;
   smtpUser?: string;

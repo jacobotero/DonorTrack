@@ -1,18 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { Users, DollarSign, TrendingUp, XCircle, Trash2, CheckCircle, Clock, ShieldCheck } from "lucide-react";
+import { Users, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../lib/api";
 
 interface OrgInfo {
   id: string;
   name: string;
-  subscriptionStatus: "TRIALING" | "ACTIVE" | "CANCELED";
-  subscriptionTier: "STARTER" | "GROWTH" | "PLUS";
-  trialEndsAt: string | null;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
   _count: { donors: number; donations: number };
 }
 
@@ -26,29 +21,10 @@ interface AdminUser {
 
 interface Stats {
   total: number;
-  trialing: number;
-  active: number;
-  canceled: number;
-  mrr: number;
 }
 
-const STATUS_COLORS = {
-  TRIALING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  ACTIVE: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-  CANCELED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-};
-
-const TIER_PRICES: Record<string, number> = { STARTER: 29, GROWTH: 59, PLUS: 99 };
-
-function formatDate(d: string | null) {
-  if (!d) return "—";
+function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function daysLeft(d: string | null) {
-  if (!d) return null;
-  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  return diff;
 }
 
 export default function Admin() {
@@ -59,7 +35,6 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "TRIALING" | "ACTIVE" | "CANCELED">("all");
 
   const load = async () => {
     try {
@@ -94,17 +69,6 @@ export default function Admin() {
     }
   };
 
-  const extendTrial = (orgId: string, days: number) =>
-    action(`extend-${orgId}`, () => api.patch(`/admin/orgs/${orgId}/extend-trial`, { days }));
-
-  const activate = (orgId: string) =>
-    action(`activate-${orgId}`, () => api.patch(`/admin/orgs/${orgId}/activate`, { tier: "PLUS" }));
-
-  const cancel = (orgId: string) => {
-    if (!confirm("Cancel this account?")) return;
-    action(`cancel-${orgId}`, () => api.patch(`/admin/orgs/${orgId}/cancel`));
-  };
-
   const deleteAccount = (orgId: string, email: string) => {
     if (!confirm(`Permanently delete ${email} and all their data? This cannot be undone.`)) return;
     action(`delete-${orgId}`, () => api.delete(`/admin/orgs/${orgId}`));
@@ -113,13 +77,11 @@ export default function Admin() {
   const verifyEmail = (userId: string) =>
     action(`verify-${userId}`, () => api.patch(`/admin/users/${userId}/verify`));
 
-  const filtered = users.filter((u) => {
-    const matchSearch =
+  const filtered = users.filter(
+    (u) =>
       u.email.toLowerCase().includes(search.toLowerCase()) ||
-      u.organization?.name.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "all" || u.organization?.subscriptionStatus === filter;
-    return matchSearch && matchFilter;
-  });
+      u.organization?.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -148,41 +110,13 @@ export default function Admin() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 max-w-xs">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Users className="w-4 h-4 text-gray-400" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">Total Users</span>
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-yellow-500" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">Trialing</span>
-              </div>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.trialing}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">Active</span>
-              </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.active}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <XCircle className="w-4 h-4 text-red-500" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">Canceled</span>
-              </div>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.canceled}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">MRR</span>
-              </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${stats.mrr}</p>
             </div>
           </div>
         )}
@@ -196,19 +130,6 @@ export default function Admin() {
             onChange={(e) => setSearch(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64"
           />
-          {(["all", "TRIALING", "ACTIVE", "CANCELED"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                filter === f
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-              }`}
-            >
-              {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
-            </button>
-          ))}
           <span className="self-center text-sm text-gray-500 dark:text-gray-400 ml-auto">
             {filtered.length} user{filtered.length !== 1 ? "s" : ""}
           </span>
@@ -221,9 +142,7 @@ export default function Admin() {
               <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User / Org</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trial / Data</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -231,14 +150,13 @@ export default function Admin() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No users found
                     </td>
                   </tr>
                 )}
                 {filtered.map((u) => {
                   const org = u.organization;
-                  const days = org ? daysLeft(org.trialEndsAt) : null;
                   const isLoading = (key: string) => actionLoading === key;
 
                   return (
@@ -254,40 +172,12 @@ export default function Admin() {
                         </p>
                       </td>
 
-                      {/* Status */}
+                      {/* Data */}
                       <td className="px-4 py-3">
                         {org ? (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[org.subscriptionStatus]}`}>
-                            {org.subscriptionStatus}
-                          </span>
-                        ) : "—"}
-                      </td>
-
-                      {/* Plan */}
-                      <td className="px-4 py-3">
-                        {org ? (
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {org.subscriptionTier}
-                            {org.subscriptionStatus === "ACTIVE" && (
-                              <span className="text-gray-400 dark:text-gray-500"> · ${TIER_PRICES[org.subscriptionTier]}/mo</span>
-                            )}
-                          </span>
-                        ) : "—"}
-                      </td>
-
-                      {/* Trial / Data */}
-                      <td className="px-4 py-3">
-                        {org ? (
-                          <div>
-                            {org.subscriptionStatus === "TRIALING" && org.trialEndsAt && (
-                              <p className={`text-xs font-medium ${days !== null && days <= 3 ? "text-red-600 dark:text-red-400" : "text-gray-600 dark:text-gray-400"}`}>
-                                {days !== null && days > 0 ? `${days}d left` : "Expired"} · {formatDate(org.trialEndsAt)}
-                              </p>
-                            )}
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                              {org._count.donors} donors · {org._count.donations} donations
-                            </p>
-                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {org._count.donors} donors · {org._count.donations} donations
+                          </p>
                         ) : "—"}
                       </td>
 
@@ -310,43 +200,6 @@ export default function Admin() {
                               >
                                 <ShieldCheck className="w-3 h-3" />
                                 {isLoading(`verify-${u.id}`) ? "..." : "Verify"}
-                              </button>
-                            )}
-
-                            {/* Extend trial */}
-                            <button
-                              onClick={() => extendTrial(org.id, 14)}
-                              disabled={!!actionLoading}
-                              title="Extend trial by 14 days"
-                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded hover:bg-yellow-100 dark:hover:bg-yellow-900/40 disabled:opacity-50"
-                            >
-                              <TrendingUp className="w-3 h-3" />
-                              {isLoading(`extend-${org.id}`) ? "..." : "+14d"}
-                            </button>
-
-                            {/* Activate */}
-                            {org.subscriptionStatus !== "ACTIVE" && (
-                              <button
-                                onClick={() => activate(org.id)}
-                                disabled={!!actionLoading}
-                                title="Manually activate account"
-                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/40 disabled:opacity-50"
-                              >
-                                <CheckCircle className="w-3 h-3" />
-                                {isLoading(`activate-${org.id}`) ? "..." : "Activate"}
-                              </button>
-                            )}
-
-                            {/* Cancel */}
-                            {org.subscriptionStatus !== "CANCELED" && (
-                              <button
-                                onClick={() => cancel(org.id)}
-                                disabled={!!actionLoading}
-                                title="Cancel account"
-                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50"
-                              >
-                                <XCircle className="w-3 h-3" />
-                                {isLoading(`cancel-${org.id}`) ? "..." : "Cancel"}
                               </button>
                             )}
 

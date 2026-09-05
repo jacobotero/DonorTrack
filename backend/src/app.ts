@@ -13,12 +13,11 @@ import fundRoutes from "./routes/funds";
 import dashboardRoutes from "./routes/dashboard";
 import reportRoutes from "./routes/reports";
 import taxLetterRoutes from "./routes/tax-letters";
-import stripeRoutes from "./routes/stripe";
 import adminRoutes from "./routes/admin";
 import supportRoutes, { publicContactRouter } from "./routes/support";
 import { apiLimiter, authLimiter } from "./middleware/rateLimiter";
 import { authenticate } from "./middleware/auth";
-import { checkTrialStatus } from "./middleware/trialCheck";
+import { requireVerifiedEmail } from "./middleware/emailVerification";
 
 const app = express();
 
@@ -66,13 +65,6 @@ app.use(
 );
 app.use(morgan("dev"));
 
-// Stripe webhook needs raw body - MUST be before express.json()
-app.use(
-  "/api/stripe/webhook",
-  express.raw({ type: "application/json" }),
-  stripeRoutes
-);
-
 app.use(express.json());
 app.use(cookieParser());
 
@@ -80,18 +72,17 @@ app.use(cookieParser());
 app.use("/api/auth", authLimiter, authRoutes); // Strict rate limiting on auth
 app.use("/api", apiLimiter); // General rate limiting on all API routes
 
-// Apply auth + trial enforcement to protected routes
-// authenticate runs first to set req.user, then checkTrialStatus uses it
-app.use("/api/organization", authenticate, checkTrialStatus, organizationRoutes);
-app.use("/api/donors", authenticate, checkTrialStatus, donorRoutes);
-app.use("/api/donations", authenticate, checkTrialStatus, donationRoutes);
-app.use("/api/funds", authenticate, checkTrialStatus, fundRoutes);
-app.use("/api/dashboard", authenticate, checkTrialStatus, dashboardRoutes);
-app.use("/api/reports", authenticate, checkTrialStatus, reportRoutes);
-app.use("/api/tax-letters", authenticate, checkTrialStatus, taxLetterRoutes);
-app.use("/api/stripe", stripeRoutes); // Stripe routes (webhook already mounted above, no trial check needed)
+// Free to use — every route below just needs a verified, authenticated user.
+// authenticate runs first to set req.user, then requireVerifiedEmail uses it.
+app.use("/api/organization", authenticate, requireVerifiedEmail, organizationRoutes);
+app.use("/api/donors", authenticate, requireVerifiedEmail, donorRoutes);
+app.use("/api/donations", authenticate, requireVerifiedEmail, donationRoutes);
+app.use("/api/funds", authenticate, requireVerifiedEmail, fundRoutes);
+app.use("/api/dashboard", authenticate, requireVerifiedEmail, dashboardRoutes);
+app.use("/api/reports", authenticate, requireVerifiedEmail, reportRoutes);
+app.use("/api/tax-letters", authenticate, requireVerifiedEmail, taxLetterRoutes);
 app.use("/api/admin", adminRoutes); // Admin routes — protected by requireAdmin middleware internally
-app.use("/api/support", authenticate, supportRoutes); // No trial check — expired/canceled users need support too
+app.use("/api/support", authenticate, supportRoutes);
 app.use("/api/contact", publicContactRouter); // Public — no auth required (landing page contact form)
 
 // Health check

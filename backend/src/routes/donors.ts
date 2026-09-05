@@ -19,58 +19,6 @@ async function getOrgId(userId: string): Promise<string | null> {
   return org?.id || null;
 }
 
-// Helper function to check if adding donors would exceed plan limit
-async function checkDonorLimit(
-  orgId: string,
-  additionalDonors: number = 1
-): Promise<{ allowed: boolean; message?: string; currentCount?: number; limit?: number }> {
-  const org = await prisma.organization.findUnique({
-    where: { id: orgId },
-    select: {
-      subscriptionTier: true,
-      _count: { select: { donors: true } },
-    },
-  });
-
-  if (!org) {
-    return { allowed: false, message: "Organization not found" };
-  }
-
-  const currentCount = org._count.donors;
-  const newTotal = currentCount + additionalDonors;
-
-  // Determine limit based on subscription tier
-  let limit: number | null = null;
-  switch (org.subscriptionTier) {
-    case "STARTER":
-      limit = 100;
-      break;
-    case "GROWTH":
-      limit = 500;
-      break;
-    case "PLUS":
-      limit = null; // Unlimited
-      break;
-  }
-
-  // If unlimited (PLUS tier), allow
-  if (limit === null) {
-    return { allowed: true };
-  }
-
-  // Check if would exceed limit
-  if (newTotal > limit) {
-    return {
-      allowed: false,
-      message: `Donor limit exceeded. Your ${org.subscriptionTier} plan allows ${limit} donors. You currently have ${currentCount} donors.`,
-      currentCount,
-      limit,
-    };
-  }
-
-  return { allowed: true, currentCount, limit };
-}
-
 // GET /api/donors
 router.get(
   "/",
@@ -307,18 +255,6 @@ router.post(
             continue;
           }
 
-          // Check donor limit before creating each new donor
-          const limitCheck = await checkDonorLimit(orgId, 1);
-          if (!limitCheck.allowed) {
-            errors.push({
-              row: i + 1,
-              error: `${limitCheck.message} Remaining rows were not imported.`,
-              upgradeRequired: true,
-            });
-            // Stop importing further rows if limit is reached
-            break;
-          }
-
           // Parse tags from semicolon-separated string
           const tags = row.tags
             ? row.tags.split(";").map((t: string) => t.trim()).filter(Boolean)
@@ -433,18 +369,6 @@ router.post(
 
       if (!firstName || !lastName) {
         res.status(400).json({ error: "First name and last name are required" });
-        return;
-      }
-
-      // Check donor limit
-      const limitCheck = await checkDonorLimit(orgId, 1);
-      if (!limitCheck.allowed) {
-        res.status(403).json({
-          error: limitCheck.message,
-          upgradeRequired: true,
-          currentCount: limitCheck.currentCount,
-          limit: limitCheck.limit,
-        });
         return;
       }
 

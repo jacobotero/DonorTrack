@@ -7,18 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum SubscriptionTier {
-  STARTER
-  GROWTH
-  PLUS
-}
-
-enum SubscriptionStatus {
-  TRIALING
-  ACTIVE
-  CANCELED
-}
-
 model User {
   id            String       @id @default(uuid()) @db.Uuid
   email         String       @unique @db.VarChar(255)
@@ -53,13 +41,6 @@ model Organization {
   smtpUser         String?          @map("smtp_user") @db.VarChar(255)
   smtpPass         String?          @map("smtp_pass") @db.VarChar(500)
   smtpFromName     String?          @map("smtp_from_name") @db.VarChar(255)
-  subscriptionTier     SubscriptionTier   @default(PLUS) @map("subscription_tier")
-  subscriptionStatus   SubscriptionStatus @default(TRIALING) @map("subscription_status")
-  trialEndsAt          DateTime?          @map("trial_ends_at")
-  stripeCustomerId     String?            @map("stripe_customer_id") @db.VarChar(255)
-  stripeSubscriptionId String?            @map("stripe_subscription_id") @db.VarChar(255)
-  trialReminder3Sent   Boolean            @default(false) @map("trial_reminder_3_sent")
-  trialReminder1Sent   Boolean            @default(false) @map("trial_reminder_1_sent")
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
@@ -141,14 +122,6 @@ model Fund {
   @@index([organizationId])
   @@index([organizationId, isActive])
   @@map("funds")
-}
-
-model TrialUsed {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("trial_used")
 }
 
 model TaxLetter {

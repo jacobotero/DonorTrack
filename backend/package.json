@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "build:lambda": "rm -rf dist-lambda dist-lambda-install && tsc --outDir dist-lambda && mkdir dist-lambda-install && cp package.json package-lock.json dist-lambda-install/ && cd dist-lambda-install && npm ci --omit=dev && PRISMA_CLI_BINARY_TARGETS=rhel-openssl-3.0.x npx prisma generate --schema=../prisma/schema.prisma && cd .. && cp -r dist-lambda-install/node_modules dist-lambda/node_modules && cp package.json dist-lambda/package.json && rm -rf dist-lambda-install",
     "start": "node dist/server.js",
     "test": "vitest run",
     "db:generate": "prisma generate",

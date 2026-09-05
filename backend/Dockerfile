@@ -1,22 +1,27 @@
-FROM node:24-alpine
+# Container-image Lambda, not a zip deployment: @prisma/client (v7) bundles
+# WASM query compilers for every database Prisma supports (Postgres, MySQL,
+# SQLite, SQL Server, CockroachDB) regardless of what this app actually
+# uses, and regardless of schema.prisma's `binaryTargets` setting — that
+# alone runs ~45MB+, pushing the total node_modules well past Lambda's
+# 250MB *unzipped* limit for a plain zip package. Container images have a
+# 10GB limit instead, which comfortably fits this without needing to fight
+# Prisma's packaging.
 
-RUN apk add --no-cache openssl
-
-WORKDIR /app
-
-COPY package*.json ./
-COPY prisma.config.ts ./
-COPY prisma/ ./prisma/
-
-RUN npm install
-
-RUN npx prisma generate
-
+# ---- Build stage: needs devDependencies (typescript) to compile ----
+FROM public.ecr.aws/lambda/nodejs:22 AS builder
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY tsconfig.json ./
-COPY src/ ./src/
+COPY src ./src
+COPY prisma ./prisma
+RUN npx tsc --outDir dist
 
-RUN npm run build
+# ---- Runtime stage: production dependencies only ----
+FROM public.ecr.aws/lambda/nodejs:22
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY prisma ./prisma
+RUN npx prisma generate
+COPY --from=builder /var/task/dist ./dist
 
-EXPOSE 3000
-
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && echo \"UPDATE organizations SET subscription_tier = 'PLUS' WHERE subscription_status = 'TRIALING';\" | npx prisma db execute --stdin && node dist/server.js"]
+CMD ["dist/lambda.handler"]

@@ -22,10 +22,6 @@ api.interceptors.response.use(
       // Only redirect on 401 for protected routes, not login/register failures
       localStorage.removeItem("token");
       window.location.href = "/login";
-    } else if (error.response?.status === 402 && error.response?.data?.trialExpired) {
-      window.location.href = "/app/upgrade?trial_expired=true";
-    } else if (error.response?.status === 402 && error.response?.data?.subscriptionCanceled) {
-      window.location.href = "/upgrade?subscription_canceled=true";
     }
     return Promise.reject(error);
   }
