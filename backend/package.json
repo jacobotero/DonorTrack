@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "build:lambda": "rm -rf dist-lambda && tsc --outDir dist-lambda && cp -r node_modules dist-lambda/node_modules && cp package.json dist-lambda/package.json",
     "start": "node dist/server.js",
     "test": "vitest run",
     "db:generate": "prisma generate",
