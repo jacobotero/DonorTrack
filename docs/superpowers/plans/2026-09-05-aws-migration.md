@@ -16,7 +16,7 @@
 - Database is Neon Postgres, reached via its **pooled** connection string, not the direct one.
 - Lambda runtime is Node.js 22.x.
 - `backend/prisma/schema.prisma`'s `generator client` block gets `binaryTargets = ["native", "rhel-openssl-3.0.x"]`.
-- No data migration — the Neon database starts empty; schema comes from `npx prisma migrate deploy` against the committed migrations.
+- No data migration — the Neon database starts empty; schema comes from `npx prisma db push` (this project has no `prisma/migrations/` history — it has always used the schema-push workflow, matching its own README's documented setup).
 - CDK is Python, in a new `infra/` directory at the repo root, matching the portfolio site's own stack for a consistent toolchain.
 - GitHub Actions deploys via OIDC role assumption — no long-lived AWS access keys stored as repo secrets.
 - DNS stays on Cloudflare. No record changes are automated; they're a documented manual step.
@@ -540,6 +540,8 @@ export const handler = serverlessHttp(app, {
 
 If the plain-string (non-base64) case fails instead, the issue is that `serverless-http` is handing Express a JS string rather than a `Buffer` for `express.raw()` — in that case, keep the `binary` option above regardless, since it also fixes this case by making `serverless-http` treat matching content types as binary uniformly for both encodings.
 
+**What actually happened when this task ran:** neither case failed for this reason — both initially failed for an unrelated cause (a missing `STRIPE_SECRET_KEY` in the test environment), and once that was fixed, all three assertions passed with `lambda.ts` completely unchanged. The `binary` option above was tried and found to break `serverless-http@4.0.0`'s outgoing response encoding (it base64-encodes every JSON response, not just the webhook's), so it was **not** applied. `lambda.ts` stays exactly as Task 3 left it. Task 11 (later) must not reintroduce this option.
+
 - [ ] **Step 4: Re-run to confirm all three tests pass**
 
 Run: `npm test -- stripeWebhook.lambda.test.ts`
@@ -628,10 +630,12 @@ In the Neon project's dashboard, find the connection string and make sure **"Poo
 
 ```bash
 cd backend
-DATABASE_URL="<pooled connection string from step 2>" npx prisma migrate deploy
+DATABASE_URL="<pooled connection string from step 2>" npx prisma db push
 ```
 
-Expected: output lists each migration in `backend/prisma/migrations/` as applied, ending with "All migrations have been successfully applied."
+(Note: this project has no `prisma/migrations/` directory — it has always used `db push`, not migration files, matching its own README's setup instructions. `prisma migrate deploy` reports "No migration found in prisma/migrations" and does nothing, which looks like success but isn't — use `db push`.)
+
+Expected: "Your database is now in sync with your Prisma schema."
 
 - [ ] **Step 4: Sanity-check the schema landed**
 
@@ -1143,7 +1147,7 @@ npm install @aws-sdk/client-ssm
 Create `backend/src/loadSecrets.test.ts`:
 
 ```ts
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 const sendMock = vi.fn();
 
@@ -1159,6 +1163,18 @@ describe("loadSecrets", () => {
     delete process.env.JWT_SECRET;
     process.env.DATABASE_URL_PARAM = "/donortrack/database-url";
     process.env.JWT_SECRET_PARAM = "/donortrack/jwt-secret";
+  });
+
+  afterEach(() => {
+    // Without this, these _PARAM env vars can leak into another test file's
+    // run (depending on Vitest's pool/isolation mode) — cron.test.ts's
+    // handler() also calls loadSecrets(), and cron.test.ts does not mock
+    // @aws-sdk/client-ssm, so a leaked *_PARAM var there would make it
+    // attempt a real, unmocked AWS SSM network call during tests.
+    delete process.env.DATABASE_URL_PARAM;
+    delete process.env.JWT_SECRET_PARAM;
+    delete process.env.DATABASE_URL;
+    delete process.env.JWT_SECRET;
   });
 
   it("populates plain env vars from their _PARAM-named SSM parameters", async () => {
@@ -1253,16 +1269,14 @@ Expected: PASS.
 
 - [ ] **Step 6: Wire it into both Lambda entry points**
 
-Modify `backend/src/lambda.ts` so secrets are loaded before each invocation (the `loaded` flag inside `loadSecrets` makes every call after the first a no-op, so this costs nothing on warm invocations):
+Modify `backend/src/lambda.ts` so secrets are loaded before each invocation (the `loaded` flag inside `loadSecrets` makes every call after the first a no-op, so this costs nothing on warm invocations). **Do not add a `binary: [...]` option to `serverlessHttp(app, ...)`** — Task 4 already established, and its review independently verified from the installed `serverless-http@4.0.0` source, that this option is unneeded for the Stripe raw-body path (it's handled correctly either way) and, worse, that adding it makes `serverless-http` base64-encode every outgoing JSON response, which would break every API endpoint, not just the webhook. Task 4 confirmed `lambda.ts` should stay exactly as Task 3 left it, with no `binary` option:
 
 ```ts
 import serverlessHttp from "serverless-http";
 import app from "./app";
 import { loadSecrets } from "./loadSecrets";
 
-const serverlessApp = serverlessHttp(app, {
-  binary: ["application/json"],
-});
+const serverlessApp = serverlessHttp(app);
 
 export const handler = async (event: any, context: any) => {
   await loadSecrets();
