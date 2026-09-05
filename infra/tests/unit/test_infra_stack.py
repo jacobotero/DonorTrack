@@ -90,3 +90,23 @@ def test_no_eventbridge_rule():
     # now-removed trial-reminder emails) must not come back silently.
     template = _synth_stack()
     template.resource_count_is("AWS::Events::Rule", 0)
+
+
+def test_github_oidc_role_exists():
+    template = _synth_stack()
+    template.has_resource_properties(
+        "AWS::IAM::Role",
+        {
+            "AssumeRolePolicyDocument": {
+                "Statement": Match.array_with(
+                    [
+                        Match.object_like(
+                            {
+                                "Action": "sts:AssumeRoleWithWebIdentity",
+                            }
+                        )
+                    ]
+                )
+            }
+        },
+    )

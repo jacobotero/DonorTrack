@@ -1,0 +1,57 @@
+name: Deploy infra
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - "backend/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Test backend
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm test
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Install infra dependencies
+        working-directory: infra
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+          pytest
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Deploy
+        working-directory: infra
+        run: cdk deploy --require-approval never

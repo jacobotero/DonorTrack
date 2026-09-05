@@ -116,3 +116,56 @@ class DonortrackStack(Stack):
             cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
             origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         )
+
+        github_oidc_provider = iam.OpenIdConnectProvider(
+            self,
+            "GithubOidcProvider",
+            url="https://token.actions.githubusercontent.com",
+            client_ids=["sts.amazonaws.com"],
+        )
+
+        # Replace "jacobotero/DonorTrack" if the repo is ever renamed/moved.
+        github_deploy_role = iam.Role(
+            self,
+            "GithubDeployRole",
+            assumed_by=iam.WebIdentityPrincipal(
+                github_oidc_provider.open_id_connect_provider_arn,
+                conditions={
+                    "StringEquals": {
+                        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                    },
+                    "StringLike": {
+                        "token.actions.githubusercontent.com:sub": "repo:jacobotero/DonorTrack:*"
+                    },
+                },
+            ),
+        )
+
+        self.frontend_bucket.grant_read_write(github_deploy_role)
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["cloudfront:CreateInvalidation"],
+                resources=["*"],
+            )
+        )
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "cloudformation:*",
+                    "lambda:*",
+                    "apigateway:*",
+                    "events:*",
+                    "iam:*",
+                    "ssm:GetParameter*",
+                    "s3:*",
+                    "cloudfront:*",
+                ],
+                resources=["*"],
+            )
+        )
+
+        from aws_cdk import CfnOutput
+
+        CfnOutput(self, "GithubDeployRoleArn", value=github_deploy_role.role_arn)
+        CfnOutput(self, "FrontendBucketName", value=self.frontend_bucket.bucket_name)
+        CfnOutput(self, "DistributionId", value=self.distribution.distribution_id)
