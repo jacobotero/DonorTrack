@@ -1,5 +1,5 @@
 import aws_cdk as cdk
-from aws_cdk.assertions import Template
+from aws_cdk.assertions import Template, Match
 
 from infra.infra_stack import DonortrackStack
 
@@ -33,3 +33,35 @@ def test_cloudfront_distribution_exists():
     stack = DonortrackStack(app, "TestStack")
     template = Template.from_stack(stack)
     template.resource_count_is("AWS::CloudFront::Distribution", 1)
+
+
+def test_api_lambda_uses_node_22_runtime():
+    app = cdk.App()
+    stack = DonortrackStack(app, "TestStack")
+    template = Template.from_stack(stack)
+    template.has_resource_properties(
+        "AWS::Lambda::Function",
+        {"Runtime": "nodejs22.x", "Handler": "lambda.handler"},
+    )
+
+
+def test_ssm_parameters_granted_to_lambda_role():
+    app = cdk.App()
+    stack = DonortrackStack(app, "TestStack")
+    template = Template.from_stack(stack)
+    template.has_resource_properties(
+        "AWS::IAM::Policy",
+        {
+            "PolicyDocument": {
+                "Statement": Match.array_with(
+                    [
+                        Match.object_like(
+                            {
+                                "Action": "ssm:GetParameter",
+                            }
+                        )
+                    ]
+                )
+            }
+        },
+    )
