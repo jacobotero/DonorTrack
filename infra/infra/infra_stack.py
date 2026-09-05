@@ -117,11 +117,17 @@ class DonortrackStack(Stack):
             origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         )
 
-        github_oidc_provider = iam.OpenIdConnectProvider(
+        # Referencing the existing provider rather than constructing a new
+        # one: AWS IAM allows only one OIDC provider per URL per account,
+        # and this account already has one (created by the portfolio site's
+        # own separate CDK stack) — a fresh `iam.OpenIdConnectProvider(...)`
+        # would fail at real `cdk deploy` time with AlreadyExists, even
+        # though it passes `cdk synth`/pytest fine since those never touch
+        # real AWS.
+        github_oidc_provider = iam.OpenIdConnectProvider.from_open_id_connect_provider_arn(
             self,
             "GithubOidcProvider",
-            url="https://token.actions.githubusercontent.com",
-            client_ids=["sts.amazonaws.com"],
+            f"arn:aws:iam::{self.account}:oidc-provider/token.actions.githubusercontent.com",
         )
 
         # Replace "jacobotero/DonorTrack" if the repo is ever renamed/moved.
