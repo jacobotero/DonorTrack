@@ -1,8 +1,7 @@
 import prisma from "./prisma";
 import { sendTrialReminderEmail } from "./routes/stripe";
+import { loadSecrets } from "./loadSecrets";
 
-// window: N days from now (±30 min to handle timing drift), same as the
-// original node-cron job this replaces.
 function window(days: number) {
   const now = new Date();
   return {
@@ -12,6 +11,7 @@ function window(days: number) {
 }
 
 export const handler = async (): Promise<void> => {
+  await loadSecrets();
   console.log("[cron] Running trial reminder check...");
 
   try {

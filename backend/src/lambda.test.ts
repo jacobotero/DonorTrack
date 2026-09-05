@@ -31,7 +31,10 @@ describe("lambda handler", () => {
     const result: any = await handler(apiGatewayEvent(), {} as any, () => {});
 
     expect(result.statusCode).toBe(200);
-    const body = JSON.parse(result.body);
+    const bodyText = result.isBase64Encoded
+      ? Buffer.from(result.body, "base64").toString("utf-8")
+      : result.body;
+    const body = JSON.parse(bodyText);
     expect(body.status).toBe("ok");
   });
 });
