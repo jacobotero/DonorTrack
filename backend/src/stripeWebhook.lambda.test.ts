@@ -57,7 +57,7 @@ describe("Stripe webhook raw body through the Lambda wrapper", () => {
 
   it("accepts a correctly-signed webhook sent as a plain string body", async () => {
     const { handler } = await import("./lambda");
-    const result: any = await handler(apiGatewayWebhookEvent(rawBody, false), {} as any, () => {});
+    const result: any = await handler(apiGatewayWebhookEvent(rawBody, false), {} as any);
 
     // A signature failure returns 400 with "Webhook Error" text from Stripe's
     // SDK; a real handler error (e.g. no matching organization) returns 500.
@@ -68,7 +68,7 @@ describe("Stripe webhook raw body through the Lambda wrapper", () => {
 
   it("accepts a correctly-signed webhook sent as a base64-encoded body", async () => {
     const { handler } = await import("./lambda");
-    const result: any = await handler(apiGatewayWebhookEvent(rawBody, true), {} as any, () => {});
+    const result: any = await handler(apiGatewayWebhookEvent(rawBody, true), {} as any);
 
     expect(result.statusCode).not.toBe(400);
   });
@@ -78,7 +78,7 @@ describe("Stripe webhook raw body through the Lambda wrapper", () => {
     event.headers["stripe-signature"] = "t=1,v1=deadbeef";
 
     const { handler } = await import("./lambda");
-    const result: any = await handler(event, {} as any, () => {});
+    const result: any = await handler(event, {} as any);
 
     expect(result.statusCode).toBe(400);
   });

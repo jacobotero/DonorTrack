@@ -28,13 +28,10 @@ function apiGatewayEvent(overrides: Partial<any> = {}) {
 
 describe("lambda handler", () => {
   it("round-trips a plain GET route through API Gateway's v2 proxy shape", async () => {
-    const result: any = await handler(apiGatewayEvent(), {} as any, () => {});
+    const result: any = await handler(apiGatewayEvent(), {} as any);
 
     expect(result.statusCode).toBe(200);
-    const bodyText = result.isBase64Encoded
-      ? Buffer.from(result.body, "base64").toString("utf-8")
-      : result.body;
-    const body = JSON.parse(bodyText);
+    const body = JSON.parse(result.body);
     expect(body.status).toBe("ok");
   });
 });
