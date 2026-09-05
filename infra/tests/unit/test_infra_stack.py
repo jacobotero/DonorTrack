@@ -65,3 +65,13 @@ def test_ssm_parameters_granted_to_lambda_role():
             }
         },
     )
+
+
+def test_cron_rule_runs_daily_at_9am_utc():
+    app = cdk.App()
+    stack = DonortrackStack(app, "TestStack")
+    template = Template.from_stack(stack)
+    template.has_resource_properties(
+        "AWS::Events::Rule",
+        {"ScheduleExpression": "cron(0 9 * * ? *)"},
+    )

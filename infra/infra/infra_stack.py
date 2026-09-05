@@ -6,6 +6,8 @@ from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_apigatewayv2_integrations as apigwv2_integrations
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_events as events
+from aws_cdk import aws_events_targets as events_targets
 from constructs import Construct
 
 
@@ -114,4 +116,37 @@ class DonortrackStack(Stack):
             allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
             cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
             origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        )
+
+        self.cron_lambda = lambda_.Function(
+            self,
+            "CronFunction",
+            runtime=lambda_.Runtime.NODEJS_22_X,
+            handler="cron.handler",
+            code=lambda_.Code.from_asset("../backend/dist-lambda"),
+            timeout=Duration.seconds(60),
+            memory_size=512,
+            environment={
+                "NODE_ENV": "production",
+                "DATABASE_URL_PARAM": "/donortrack/database-url",
+                "RESEND_API_KEY_PARAM": "/donortrack/resend-api-key",
+                "FRONTEND_URL": "https://www.donortrackapp.com",
+            },
+        )
+
+        self.cron_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter"],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter{name}"
+                    for name in ["/donortrack/database-url", "/donortrack/resend-api-key"]
+                ],
+            )
+        )
+
+        events.Rule(
+            self,
+            "TrialReminderSchedule",
+            schedule=events.Schedule.cron(minute="0", hour="9"),
+            targets=[events_targets.LambdaFunction(self.cron_lambda)],
         )
