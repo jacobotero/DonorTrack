@@ -40,6 +40,18 @@ describe("cron handler", () => {
     const { handler } = await import("./cron");
     await handler();
 
+    // Verify the 3-day findMany query arguments
+    const firstFindManyCall = findManyMock.mock.calls[0][0];
+    expect(firstFindManyCall.where).toMatchObject({
+      subscriptionStatus: "TRIALING",
+      trialReminder3Sent: false,
+    });
+    expect(firstFindManyCall.where.trialEndsAt).toBeDefined();
+    expect(firstFindManyCall.where.trialEndsAt).toHaveProperty("gte");
+    expect(firstFindManyCall.where.trialEndsAt).toHaveProperty("lte");
+    expect(firstFindManyCall.where.trialEndsAt.gte).toBeInstanceOf(Date);
+    expect(firstFindManyCall.where.trialEndsAt.lte).toBeInstanceOf(Date);
+
     expect(sendTrialReminderEmailMock).toHaveBeenCalledWith(
       "owner@example.com",
       "Test Org",
@@ -68,6 +80,18 @@ describe("cron handler", () => {
     const { handler } = await import("./cron");
     await handler();
 
+    // Verify the 1-day findMany query arguments
+    const secondFindManyCall = findManyMock.mock.calls[1][0];
+    expect(secondFindManyCall.where).toMatchObject({
+      subscriptionStatus: "TRIALING",
+      trialReminder1Sent: false,
+    });
+    expect(secondFindManyCall.where.trialEndsAt).toBeDefined();
+    expect(secondFindManyCall.where.trialEndsAt).toHaveProperty("gte");
+    expect(secondFindManyCall.where.trialEndsAt).toHaveProperty("lte");
+    expect(secondFindManyCall.where.trialEndsAt.gte).toBeInstanceOf(Date);
+    expect(secondFindManyCall.where.trialEndsAt.lte).toBeInstanceOf(Date);
+
     expect(sendTrialReminderEmailMock).toHaveBeenCalledWith(
       "owner2@example.com",
       "Other Org",
@@ -95,5 +119,14 @@ describe("cron handler", () => {
 
     const { handler } = await import("./cron");
     await expect(handler()).resolves.not.toThrow();
+
+    // Verify the 3-day findMany query was still made with proper arguments
+    const firstFindManyCall = findManyMock.mock.calls[0][0];
+    expect(firstFindManyCall.where).toMatchObject({
+      subscriptionStatus: "TRIALING",
+      trialReminder3Sent: false,
+    });
+    expect(firstFindManyCall.where.trialEndsAt).toHaveProperty("gte");
+    expect(firstFindManyCall.where.trialEndsAt).toHaveProperty("lte");
   });
 });
