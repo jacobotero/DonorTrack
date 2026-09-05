@@ -151,9 +151,34 @@ class DonortrackStack(Stack):
         github_deploy_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["cloudfront:CreateInvalidation"],
-                resources=["*"],
+                resources=[
+                    f"arn:aws:cloudfront::{self.account}:distribution/{self.distribution.distribution_id}"
+                ],
             )
         )
+        # This role only ever needs to read *this stack's* secrets, so unlike
+        # the broad grant below, scoping it costs nothing and closes a real
+        # gap: an unscoped `ssm:GetParameter*` would let CI read every
+        # parameter in the account, including the portfolio site's.
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter*"],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter{name}"
+                    for name in secret_param_names
+                ],
+            )
+        )
+        # `cloudformation:*`/`lambda:*`/`apigateway:*`/`events:*`/`iam:*`/`s3:*`/
+        # `cloudfront:*` on resources:["*"] is intentionally broad — `cdk deploy`
+        # needs to create and modify whatever this stack's resources are, and
+        # that set changes as the stack grows, so pinning it to today's
+        # resource ARNs would silently break the next `cdk deploy` that adds
+        # something new. `iam:*` in particular is privilege-escalation-capable
+        # (e.g. this role could attach a policy to itself or mint new IAM
+        # users), so this trade is safe only because the trust policy above
+        # restricts *who* can assume the role to this one GitHub repo's
+        # Actions runs — not because the actions themselves are narrow.
         github_deploy_role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -162,7 +187,6 @@ class DonortrackStack(Stack):
                     "apigateway:*",
                     "events:*",
                     "iam:*",
-                    "ssm:GetParameter*",
                     "s3:*",
                     "cloudfront:*",
                 ],
