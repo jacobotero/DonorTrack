@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../prisma";
-import { emailService } from "../utils/email";
+import { sendContactEmail } from "../utils/ses";
 
 const router = Router();
 
@@ -37,35 +37,10 @@ router.post("/", async (req, res) => {
 
     const orgName = user.organization?.name || "Unknown Organization";
 
-    await emailService.sendEmail({
-      to: "donortrackapp@gmail.com",
+    await sendContactEmail({
       subject: `[Support] ${subject.trim()}`,
       text: `Support request from ${user.email} (${orgName})\n\n${message.trim()}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px;">
-          <h2 style="color: #059669;">New Support Request</h2>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-            <tr>
-              <td style="padding: 4px 8px; font-weight: bold; color: #374151; width: 120px;">From</td>
-              <td style="padding: 4px 8px; color: #6b7280;">${user.email}</td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 8px; font-weight: bold; color: #374151;">Organization</td>
-              <td style="padding: 4px 8px; color: #6b7280;">${orgName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 8px; font-weight: bold; color: #374151;">Subject</td>
-              <td style="padding: 4px 8px; color: #6b7280;">${subject.trim()}</td>
-            </tr>
-          </table>
-          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
-            <p style="margin: 0; color: #374151; white-space: pre-wrap;">${message.trim()}</p>
-          </div>
-          <p style="margin-top: 16px; color: #9ca3af; font-size: 12px;">
-            Reply directly to ${user.email} to respond to this request.
-          </p>
-        </div>
-      `,
+      replyTo: user.email,
     });
 
     res.json({ success: true });
@@ -100,31 +75,10 @@ publicContactRouter.post("/", async (req, res) => {
       return;
     }
 
-    await emailService.sendEmail({
-      to: "donortrackapp@gmail.com",
+    await sendContactEmail({
       subject: `[Contact] ${subject.trim()}`,
       text: `Message from ${email.trim()}\n\n${message.trim()}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px;">
-          <h2 style="color: #059669;">New Contact Message</h2>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-            <tr>
-              <td style="padding: 4px 8px; font-weight: bold; color: #374151; width: 120px;">From</td>
-              <td style="padding: 4px 8px; color: #6b7280;">${email.trim()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 8px; font-weight: bold; color: #374151;">Subject</td>
-              <td style="padding: 4px 8px; color: #6b7280;">${subject.trim()}</td>
-            </tr>
-          </table>
-          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
-            <p style="margin: 0; color: #374151; white-space: pre-wrap;">${message.trim()}</p>
-          </div>
-          <p style="margin-top: 16px; color: #9ca3af; font-size: 12px;">
-            Reply directly to ${email.trim()} to respond.
-          </p>
-        </div>
-      `,
+      replyTo: email.trim(),
     });
 
     res.json({ success: true });

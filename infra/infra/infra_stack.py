@@ -7,7 +7,15 @@ from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_apigatewayv2_integrations as apigwv2_integrations
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_certificatemanager as acm
+from aws_cdk import aws_ses as ses
 from constructs import Construct
+
+# The contact/support forms send through SES rather than Resend (which has
+# no API key configured). Sender and recipient are the same verified
+# identity, so this works even while the SES account is in sandbox mode
+# (which only allows sending between verified identities) with no domain
+# verification or production-access request needed.
+CONTACT_EMAIL = "donortrackapp@gmail.com"
 
 
 class DonortrackStack(Stack):
@@ -128,6 +136,24 @@ class DonortrackStack(Stack):
                 resources=[
                     f"arn:aws:ssm:{self.region}:{self.account}:parameter{name}"
                     for name in secret_param_names
+                ],
+            )
+        )
+
+        # Verifies donortrackapp@gmail.com as an SES sending identity. CDK
+        # creates the identity, but AWS itself emails a confirmation link to
+        # that inbox that a human has to click — this can't be automated,
+        # same as the ACM certificate's DNS validation above.
+        ses.EmailIdentity(
+            self,
+            "ContactEmailIdentity",
+            identity=ses.Identity.email(CONTACT_EMAIL),
+        )
+        self.api_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ses:SendEmail", "ses:SendRawEmail"],
+                resources=[
+                    f"arn:aws:ses:{self.region}:{self.account}:identity/{CONTACT_EMAIL}"
                 ],
             )
         )

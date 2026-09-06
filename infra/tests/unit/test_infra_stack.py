@@ -123,6 +123,21 @@ def test_spa_routing_is_scoped_to_the_default_behavior_only():
     )
 
 
+def test_ses_email_identity_and_send_permission_exist():
+    template = _synth_stack()
+    template.resource_count_is("AWS::SES::EmailIdentity", 1)
+    template.has_resource_properties(
+        "AWS::IAM::Policy",
+        {
+            "PolicyDocument": {
+                "Statement": Match.array_with(
+                    [Match.object_like({"Action": Match.array_with(["ses:SendEmail"])})]
+                )
+            }
+        },
+    )
+
+
 def test_github_deploy_role_can_assume_cdk_bootstrap_roles():
     # Regression guard: without sts:AssumeRole on the bootstrap roles,
     # `cdk deploy` silently falls back to acting as this role directly
