@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import prisma from "../prisma";
 
 /**
- * DonorTrack is free to use — this middleware no longer gates on
- * subscription/trial status, only on having a verified email (an
- * anti-abuse check, not a paywall).
+ * Unused — no route mounts this anymore (see app.ts). There's no email
+ * provider configured, so `emailVerified` can never actually become true;
+ * gating on it would lock out every user with no way to unlock. Left in
+ * place, dormant, in case an email provider comes back later.
  */
 export const requireVerifiedEmail = async (
   req: Request,

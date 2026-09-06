@@ -1,23 +1,22 @@
 # DonorTrack
 
-**A full-stack SaaS application for donor management at small nonprofits — live in production at [donortrackapp.com](https://www.donortrackapp.com)**
+**A full-stack donor management application for small nonprofits — live in production at [donortrackapp.com](https://www.donortrackapp.com), free to use**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-20232A?style=flat&logo=react&logoColor=61DAFB)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_18-316192?style=flat&logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma_7-2D3748?style=flat&logo=prisma&logoColor=white)
-![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=flat&logo=stripe&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
-![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat&logo=railway&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazonaws&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 
 ---
 
 ## Overview
 
-DonorTrack is a multi-tenant SaaS product designed for small nonprofits and churches to replace spreadsheets. Organizations sign up, manage their donors and donations, generate IRS-compliant tax letters, and export reports — all within an isolated, secure account.
+DonorTrack is a multi-tenant application for small nonprofits and churches to replace donor-tracking spreadsheets. Organizations sign up, manage their donors and donations, generate IRS-compliant tax letters, and export reports — all within an isolated account.
 
-The app handles the full SaaS lifecycle: free trial → Stripe subscription → active account → cancellation, with automated transactional emails and webhook-driven subscription state at each step.
+It's free to use, with no plan gating, no trial expiry, and no payment required — every account gets full access to every feature immediately.
 
 **Live:** [donortrackapp.com](https://www.donortrackapp.com)
 
@@ -26,15 +25,13 @@ The app handles the full SaaS lifecycle: free trial → Stripe subscription → 
 ## Technical Highlights
 
 - **Multi-tenant architecture** — every organization's data is fully isolated via foreign key scoping at the database level
-- **Stripe billing integration** — checkout sessions, subscription lifecycle webhooks (`checkout.session.completed`, `customer.subscription.deleted`), webhook signature verification with raw body parsing
-- **Transactional email pipeline** — welcome, purchase confirmation, cancellation confirmation, and trial reminder emails via Resend, with a `node-cron` daily job that checks trial expirations and sends 3-day and 1-day reminders
+- **Serverless AWS deployment** — Lambda (container image) behind API Gateway, S3 + CloudFront for the frontend, all provisioned as code via AWS CDK (Python)
 - **JWT authentication** — stateless auth with `bcrypt` password hashing, token expiry, and middleware-enforced route protection
 - **CSV import/export** — bulk import donors and donations with validation, error reporting, and donor matching by email; export any dataset to CSV
 - **PDF generation** — IRS-compliant year-end tax letters generated server-side with PDFKit, downloadable individually or as a batch ZIP
-- **Admin panel** — internal management dashboard protected by email-gated middleware; view all users, extend trials, activate/cancel accounts, manually verify emails
-- **Sentry error monitoring** — integrated on both frontend and backend with environment-aware initialization
-- **Rate limiting** — API-level rate limiting on all routes to prevent abuse
+- **Rate limiting** — API-level rate limiting on auth and general routes to slow abuse
 - **SEO** — sitemap.xml and robots.txt served statically, submitted to Google Search Console
+- **CI/CD via OIDC** — GitHub Actions deploys to AWS by assuming an IAM role via OpenID Connect; no long-lived AWS credentials stored anywhere
 
 ---
 
@@ -44,42 +41,39 @@ The app handles the full SaaS lifecycle: free trial → Stripe subscription → 
 |---|---|
 | Frontend | React 19, TypeScript, Vite 7, Tailwind CSS v4, React Router, Recharts |
 | Backend | Node.js, Express 5, TypeScript |
-| Database | PostgreSQL 18 with Prisma 7 ORM |
+| Database | PostgreSQL (Neon, serverless) with Prisma 7 ORM |
 | Auth | JSON Web Tokens, bcrypt |
-| Payments | Stripe (Checkout, Subscriptions, Webhooks) |
-| Email | Resend, node-cron |
 | PDF | PDFKit |
 | CSV | csv-parse, csv-stringify (backend), PapaParse (frontend) |
-| Error Tracking | Sentry |
-| Frontend Hosting | Vercel |
-| Backend Hosting | Railway |
+| Infrastructure | AWS CDK (Python) — Lambda, API Gateway, S3, CloudFront, SSM, IAM |
+| CI/CD | GitHub Actions, OIDC-federated AWS deploy role |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                     Vercel (CDN)                     │
-│          React SPA + Static Assets                   │
-│          /api/* → proxied to Railway                 │
-└────────────────────────┬────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────┐
-│                  Railway (Backend)                   │
-│              Express 5 + TypeScript                  │
-│         Prisma ORM → PostgreSQL 18                   │
-│         node-cron (trial reminder jobs)              │
-└────────────────────────┬────────────────────────────┘
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-     ┌─────────────┐      ┌─────────────────┐
-     │  PostgreSQL  │      │  Stripe / Resend │
-     │  (Railway)   │      │  (External APIs) │
-     └─────────────┘      └─────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│                  CloudFront (donortrackapp.com)            │
+│   default behavior → S3 (React SPA + static assets)        │
+│   /api/* behavior   → API Gateway (HTTP API)                │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+                            ▼
+                  ┌──────────────────────┐
+                  │   Lambda (container)  │
+                  │   Express + Prisma     │
+                  └──────────┬────────────┘
+                             │
+                ┌────────────┴────────────┐
+                ▼                          ▼
+       ┌─────────────────┐      ┌──────────────────────┐
+       │  Neon Postgres    │      │  SSM Parameter Store  │
+       │  (serverless)      │      │  (JWT secret, DB URL) │
+       └─────────────────┘      └──────────────────────┘
 ```
+
+Full design rationale lives in [docs/superpowers/specs/2026-09-05-aws-migration-design.md](./docs/superpowers/specs/2026-09-05-aws-migration-design.md).
 
 ---
 
@@ -99,14 +93,8 @@ The app handles the full SaaS lifecycle: free trial → Stripe subscription → 
 
 ### Tax Letters
 - One-click IRS-compliant year-end tax letter generation for all donors
-- Batch download as ZIP or send individually via email
+- Batch download as ZIP, or send individually via an organization's own SMTP credentials
 - Per-letter sent/unsent tracking
-
-### SaaS Billing
-- 14-day free trial (enforced server-side, not just frontend)
-- Three subscription tiers (Starter $29/mo, Growth $59/mo, Plus $99/mo)
-- Stripe Checkout for payment, webhook-driven account activation
-- Graceful cancellation flow with access retention until period end
 
 ---
 
@@ -116,26 +104,34 @@ The app handles the full SaaS lifecycle: free trial → Stripe subscription → 
 DonorTrack/
 ├── backend/
 │   ├── prisma/
-│   │   └── schema.prisma       # DB schema (User, Organization, Donor, Donation, Fund, TaxLetter, TrialUsed)
+│   │   └── schema.prisma       # DB schema (User, Organization, Donor, Donation, Fund, TaxLetter)
 │   ├── src/
 │   │   ├── config/             # Env validation
 │   │   ├── middleware/         # Auth, rate limiting
-│   │   ├── routes/             # donors, donations, funds, reports, tax-letters, stripe, admin, auth
+│   │   ├── routes/             # donors, donations, funds, reports, tax-letters, admin, auth
 │   │   ├── utils/              # Email, PDF generation
 │   │   ├── app.ts              # Express setup
-│   │   ├── prisma.ts           # Prisma client with pg adapter
-│   │   └── server.ts           # Entry point + cron jobs
-│   └── prisma.config.ts        # Prisma 7 datasource config
-└── frontend/
-    ├── public/
-    │   ├── sitemap.xml
-    │   └── robots.txt
-    └── src/
-        ├── components/         # Shared UI components
-        ├── hooks/              # usePageTitle, useAuth
-        ├── lib/                # Axios instance, helpers
-        ├── pages/              # Dashboard, Donors, Donations, Reports, TaxLetters, Settings, Admin, Auth
-        └── App.tsx             # Routes + auth guard
+│   │   ├── lambda.ts           # Lambda entry point (API Gateway proxy)
+│   │   ├── loadSecrets.ts      # Fetches secrets from SSM at cold start
+│   │   ├── prisma.ts           # Prisma client
+│   │   └── server.ts           # Local-dev entry point
+│   └── Dockerfile              # Multi-stage build → Lambda container image
+├── frontend/
+│   ├── public/
+│   │   ├── sitemap.xml
+│   │   └── robots.txt
+│   └── src/
+│       ├── components/         # Shared UI components
+│       ├── hooks/              # usePageTitle, useAuth
+│       ├── lib/                # Axios instance, helpers
+│       ├── pages/              # Dashboard, Donors, Donations, Reports, TaxLetters, Settings, Admin, Auth
+│       └── App.tsx             # Routes + auth guard
+├── infra/
+│   ├── infra/infra_stack.py    # CDK stack: S3, CloudFront, Lambda, API Gateway, IAM
+│   └── tests/unit/             # pytest regression guards on the synthesized template
+└── .github/workflows/
+    ├── deploy-frontend.yml     # Build + sync to S3 + invalidate CloudFront
+    └── deploy-infra.yml        # Test, apply DB schema, cdk deploy
 ```
 
 ---
@@ -143,8 +139,8 @@ DonorTrack/
 ## Local Development
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
+- Node.js 20+
+- PostgreSQL 14+ (or a free [Neon](https://neon.tech) project)
 
 ### Setup
 
@@ -172,16 +168,15 @@ npm run dev                # http://localhost:5173
 DATABASE_URL=postgresql://user:password@localhost:5432/donortrack
 JWT_SECRET=your-secret-key-min-32-chars
 FRONTEND_URL=http://localhost:5173
-RESEND_API_KEY=re_...
-STRIPE_SECRET_KEY=sk_...
-STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+`RESEND_API_KEY` and `SENTRY_DSN` are optional — without them, email sending and error reporting no-op gracefully rather than failing.
 
 ---
 
 ## Deployment
 
-- **Frontend** — push to `main`, Vercel auto-deploys
-- **Backend** — push to `main`, Railway auto-deploys via Dockerfile; runs `prisma db push` on container start
+DonorTrack runs on AWS, provisioned entirely via CDK. See [infra/README.md](./infra/README.md) for the full architecture, the manual one-time setup (SSM secrets, ACM certificate, GitHub Actions repo variables), and how deploys work day to day.
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for full production setup.
+- **Frontend** — push to `main` touching `frontend/**` → builds and syncs to S3, invalidates CloudFront
+- **Backend/infra** — push to `main` touching `backend/**` or `infra/**` → tests, applies the Prisma schema, then `cdk deploy`

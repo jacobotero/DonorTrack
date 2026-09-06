@@ -21,8 +21,21 @@ RUN npx tsc --outDir dist
 FROM public.ecr.aws/lambda/nodejs:22
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
-COPY prisma ./prisma
-RUN npx prisma generate
+# Copying the already-generated client from the builder stage instead of
+# running `npx prisma generate` again here: this stage's `npm ci --omit=dev`
+# never installs the `prisma` devDependency, so `npx` would fetch whatever
+# CLI version is currently latest on the registry at build time — an
+# unpinned network dependency that could generate a client mismatched with
+# the pinned `@prisma/client` version, or just fail if the registry is
+# unreachable. The builder stage already generated it with the correct,
+# lockfile-pinned CLI. Both directories are required: `@prisma/client` is
+# the public package, but its actual generated code (including the
+# schema-specific compiled query engine) lives in `.prisma/client`, which
+# `@prisma/client` requires at runtime — verified locally via a real
+# `docker build`, since copying only `@prisma/client` builds fine but
+# throws `Cannot find module '.prisma/client/default'` at runtime.
+COPY --from=builder /var/task/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /var/task/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=builder /var/task/dist ./dist
 
 CMD ["dist/lambda.handler"]
