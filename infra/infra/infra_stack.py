@@ -6,6 +6,7 @@ from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_apigatewayv2_integrations as apigwv2_integrations
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_certificatemanager as acm
 from constructs import Construct
 
 
@@ -21,9 +22,21 @@ class DonortrackStack(Stack):
             auto_delete_objects=True,
         )
 
+        # DNS lives in Cloudflare, not Route53, so this references a
+        # certificate requested and DNS-validated manually (see the runbook
+        # in Task 14) rather than using CDK's Route53-integrated
+        # `acm.Certificate` construct, which assumes CDK owns the zone.
+        site_certificate = acm.Certificate.from_certificate_arn(
+            self,
+            "SiteCertificate",
+            "arn:aws:acm:us-east-1:699575759727:certificate/a0b7e5f5-7d21-49cc-b35d-199cee2dc840",
+        )
+
         self.distribution = cloudfront.Distribution(
             self,
             "Distribution",
+            domain_names=["donortrackapp.com", "www.donortrackapp.com"],
+            certificate=site_certificate,
             default_root_object="index.html",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(
