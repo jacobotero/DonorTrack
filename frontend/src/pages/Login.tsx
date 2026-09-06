@@ -13,8 +13,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user && user.emailVerified) return <Navigate to="/app" replace />;
-  if (user && !user.emailVerified) return <Navigate to="/verify-email-pending" replace />;
+  if (user) return <Navigate to="/app" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

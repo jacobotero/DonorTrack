@@ -92,6 +92,37 @@ def test_no_eventbridge_rule():
     template.resource_count_is("AWS::Events::Rule", 0)
 
 
+def test_spa_routing_is_scoped_to_the_default_behavior_only():
+    # Regression guard: SPA routing used to be a distribution-level
+    # `error_responses` rewrite, which CloudFormation applies to *every*
+    # behavior, not just the frontend one — silently turning every 403/404
+    # from the /api/* behavior into a 200 HTML response. It's now a
+    # CloudFront Function on the default behavior only, and the
+    # distribution has no CustomErrorResponses at all.
+    template = _synth_stack()
+    template.has_resource_properties(
+        "AWS::CloudFront::Distribution",
+        {
+            "DistributionConfig": Match.object_like(
+                {
+                    "DefaultCacheBehavior": Match.object_like(
+                        {
+                            "FunctionAssociations": Match.array_with(
+                                [
+                                    Match.object_like(
+                                        {"EventType": "viewer-request"}
+                                    )
+                                ]
+                            )
+                        }
+                    ),
+                    "CustomErrorResponses": Match.absent(),
+                }
+            )
+        },
+    )
+
+
 def test_github_oidc_role_exists():
     template = _synth_stack()
     template.has_resource_properties(

@@ -14,7 +14,6 @@ export default function AppLayout() {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.emailVerified) return <Navigate to="/verify-email-pending" replace />;
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">

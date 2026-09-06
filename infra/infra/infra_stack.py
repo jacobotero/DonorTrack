@@ -32,6 +32,30 @@ class DonortrackStack(Stack):
             "arn:aws:acm:us-east-1:699575759727:certificate/a0b7e5f5-7d21-49cc-b35d-199cee2dc840",
         )
 
+        # SPA routing (rewrite any extensionless path to /index.html so
+        # React Router can handle it client-side) used to be done via
+        # `error_responses` on the whole Distribution — but that property is
+        # distribution-wide in CloudFormation, not scoped to this behavior,
+        # so it was also rewriting every 403/404 from the /api/* behavior
+        # into a 200 HTML response. That corrupted every real "not found"
+        # error the API returned (e.g. a deleted donor) into an
+        # unparseable-as-JSON 200. A CloudFront Function attached only to
+        # this default behavior does the same rewrite without touching the
+        # API behavior at all.
+        spa_router = cloudfront.Function(
+            self,
+            "SpaRouterFunction",
+            code=cloudfront.FunctionCode.from_inline(
+                "function handler(event) {\n"
+                "  var request = event.request;\n"
+                "  if (!request.uri.includes('.')) {\n"
+                "    request.uri = '/index.html';\n"
+                "  }\n"
+                "  return request;\n"
+                "}"
+            ),
+        )
+
         self.distribution = cloudfront.Distribution(
             self,
             "Distribution",
@@ -43,21 +67,13 @@ class DonortrackStack(Stack):
                     self.frontend_bucket
                 ),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                function_associations=[
+                    cloudfront.FunctionAssociation(
+                        function=spa_router,
+                        event_type=cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    )
+                ],
             ),
-            error_responses=[
-                cloudfront.ErrorResponse(
-                    http_status=403,
-                    response_http_status=200,
-                    response_page_path="/index.html",
-                    ttl=Duration.seconds(0),
-                ),
-                cloudfront.ErrorResponse(
-                    http_status=404,
-                    response_http_status=200,
-                    response_page_path="/index.html",
-                    ttl=Duration.seconds(0),
-                ),
-            ],
         )
 
         # Secrets, referenced by name at deploy time — the actual values are
