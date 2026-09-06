@@ -17,7 +17,6 @@ import adminRoutes from "./routes/admin";
 import supportRoutes, { publicContactRouter } from "./routes/support";
 import { apiLimiter, authLimiter } from "./middleware/rateLimiter";
 import { authenticate } from "./middleware/auth";
-import { requireVerifiedEmail } from "./middleware/emailVerification";
 
 const app = express();
 
@@ -72,15 +71,18 @@ app.use(cookieParser());
 app.use("/api/auth", authLimiter, authRoutes); // Strict rate limiting on auth
 app.use("/api", apiLimiter); // General rate limiting on all API routes
 
-// Free to use — every route below just needs a verified, authenticated user.
-// authenticate runs first to set req.user, then requireVerifiedEmail uses it.
-app.use("/api/organization", authenticate, requireVerifiedEmail, organizationRoutes);
-app.use("/api/donors", authenticate, requireVerifiedEmail, donorRoutes);
-app.use("/api/donations", authenticate, requireVerifiedEmail, donationRoutes);
-app.use("/api/funds", authenticate, requireVerifiedEmail, fundRoutes);
-app.use("/api/dashboard", authenticate, requireVerifiedEmail, dashboardRoutes);
-app.use("/api/reports", authenticate, requireVerifiedEmail, reportRoutes);
-app.use("/api/tax-letters", authenticate, requireVerifiedEmail, taxLetterRoutes);
+// Free to use — every route below just needs an authenticated user. No email
+// verification gate: there's no email provider configured (no Resend
+// account), so requiring verification would lock every new signup out with
+// no way to ever unlock. requireVerifiedEmail still exists, unused, in case
+// email comes back later.
+app.use("/api/organization", authenticate, organizationRoutes);
+app.use("/api/donors", authenticate, donorRoutes);
+app.use("/api/donations", authenticate, donationRoutes);
+app.use("/api/funds", authenticate, fundRoutes);
+app.use("/api/dashboard", authenticate, dashboardRoutes);
+app.use("/api/reports", authenticate, reportRoutes);
+app.use("/api/tax-letters", authenticate, taxLetterRoutes);
 app.use("/api/admin", adminRoutes); // Admin routes — protected by requireAdmin middleware internally
 app.use("/api/support", authenticate, supportRoutes);
 app.use("/api/contact", publicContactRouter); // Public — no auth required (landing page contact form)

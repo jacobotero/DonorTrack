@@ -602,16 +602,8 @@ router.post(
       // Fetch the manager's login email to use as "From" address
       const user = await prisma.user.findUnique({
         where: { id: req.user!.userId },
-        select: { email: true, emailVerified: true },
+        select: { email: true },
       });
-
-      if (!user?.emailVerified) {
-        res.status(403).json({
-          error: "Email not verified",
-          message: "Please verify your email address before sending tax letters.",
-        });
-        return;
-      }
 
       const letter = await prisma.taxLetter.findFirst({
         where: {
