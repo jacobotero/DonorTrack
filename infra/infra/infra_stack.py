@@ -105,6 +105,11 @@ class DonortrackStack(Stack):
                 "PORT": "3000",
                 "JWT_EXPIRES_IN": "7d",
                 "FRONTEND_URL": "https://www.donortrackapp.com",
+                # Not a secret (just an email address) so it's a plain env
+                # var here rather than an SSM parameter. Must exactly match
+                # the (lowercased) email of the DonorTrack account used to
+                # log into /admin.
+                "ADMIN_EMAIL": "jacobotero0313@gmail.com",
                 "DATABASE_URL_PARAM": "/donortrack/database-url",
                 "JWT_SECRET_PARAM": "/donortrack/jwt-secret",
                 "RESEND_API_KEY_PARAM": "/donortrack/resend-api-key",
