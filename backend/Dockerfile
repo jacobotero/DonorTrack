@@ -14,6 +14,7 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
 COPY prisma ./prisma
+RUN npx prisma generate
 RUN npx tsc --outDir dist
 
 # ---- Runtime stage: production dependencies only ----
