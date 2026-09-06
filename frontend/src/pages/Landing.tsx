@@ -160,7 +160,7 @@ export default function Landing() {
               to="/register"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors"
             >
-              Start Free Today
+              Get Started
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a
@@ -171,7 +171,7 @@ export default function Landing() {
             </a>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            No credit card required • Free to start • Cancel anytime
+            100% free, no catch • Every feature included • No account limits
           </p>
         </div>
       </section>
@@ -320,7 +320,7 @@ export default function Landing() {
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-8">
-            No credit card required • Set up in minutes
+            Always free • Set up in minutes
           </p>
         </div>
       </section>
@@ -343,7 +343,7 @@ export default function Landing() {
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="text-sm text-emerald-100 mt-4">
-            No credit card required • Set up in minutes
+            Always free • Set up in minutes
           </p>
         </div>
       </section>

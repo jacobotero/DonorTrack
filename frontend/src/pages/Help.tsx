@@ -9,7 +9,7 @@ import {
   FileText,
   BarChart3,
   Download,
-  CreditCard,
+  Gift,
   HelpCircle,
   BookOpen,
 } from "lucide-react";
@@ -77,7 +77,7 @@ const navSections = [
   { id: "tax-letters", label: "Tax Letters" },
   { id: "reports", label: "Reports" },
   { id: "csv", label: "CSV Import & Export" },
-  { id: "billing", label: "Pricing" },
+  { id: "free-to-use", label: "Free to Use" },
   { id: "faq", label: "FAQ" },
 ];
 
@@ -256,12 +256,11 @@ export default function Help() {
             </SectionBlock>
           </div>
 
-          {/* Billing */}
-          <div id="billing" className="scroll-mt-20">
-            <SectionBlock icon={CreditCard} title="Pricing">
+          {/* Free to Use */}
+          <div id="free-to-use" className="scroll-mt-20">
+            <SectionBlock icon={Gift} title="Free to Use">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Free to use</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">DonorTrack is completely free. Every feature, including tax letter generation, is available to every account with no limits and no credit card required.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">DonorTrack is completely free. Every feature, including tax letter generation, is available to every account with no limits.</p>
               </div>
             </SectionBlock>
           </div>
@@ -279,8 +278,8 @@ export default function Help() {
                   a: "Yes. DonorTrack generates letters that include your organization's name and address, the donor's name, total contributions for the year, and the required IRS statement: 'No goods or services were provided in exchange for this contribution.' Make sure your organization profile is complete in Settings for the letter to be fully accurate."
                 },
                 {
-                  q: "What happens to my data if I cancel?",
-                  a: "Your data is preserved when you cancel. If you resubscribe, everything will be exactly as you left it. You can also export all your donors and donations as CSV files before canceling."
+                  q: "What happens to my data if I delete my account?",
+                  a: "Deleting your account permanently removes your organization's data — this can't be undone. Export your donors and donations as CSV files first (Donors → Export, Donations → Export) if you want to keep a copy."
                 },
                 {
                   q: "Can multiple people use the same account?",
