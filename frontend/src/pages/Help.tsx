@@ -152,10 +152,9 @@ export default function Help() {
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Setting up your account</h3>
                 <Step number={1} title="Create your account" description="Register with your email and organization name. You'll get full access to every feature immediately, free." />
-                <Step number={2} title="Verify your email" description="Click the link in the verification email we send you. This unlocks your dashboard." />
-                <Step number={3} title="Fill in your organization profile" description="Go to Settings → Organization Profile and add your address, EIN, and logo. This information appears on tax letters." />
-                <Step number={4} title="Add your first donors" description="Go to Donors → Add Donor, or import a CSV file if you have an existing list." />
-                <Step number={5} title="Record donations" description="Go to Donations → Add Donation and select a donor, amount, date, and fund." />
+                <Step number={2} title="Fill in your organization profile" description="Go to Settings → Organization Profile and add your address, EIN, and logo. This information appears on tax letters." />
+                <Step number={3} title="Add your first donors" description="Go to Donors → Add Donor, or import a CSV file if you have an existing list." />
+                <Step number={4} title="Record donations" description="Go to Donations → Add Donation and select a donor, amount, date, and fund." />
               </div>
             </SectionBlock>
           </div>

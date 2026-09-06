@@ -20,7 +20,7 @@ import { authenticate } from "./middleware/auth";
 
 const app = express();
 
-// Trust Railway/Vercel proxy so rate limiters get real client IPs
+// Trust API Gateway/CloudFront's proxy so rate limiters get real client IPs
 app.set("trust proxy", 1);
 
 // Middleware
@@ -50,8 +50,7 @@ app.use(
         "https://donortrackapp.com",
         "https://www.donortrackapp.com",
       ];
-      // Allow any Vercel preview/production URLs
-      if (!origin || allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      if (!origin || allowed.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

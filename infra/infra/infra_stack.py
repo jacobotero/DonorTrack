@@ -222,6 +222,41 @@ class DonortrackStack(Stack):
                 resources=["*"],
             )
         )
+        # CDK's normal deploy path assumes the bootstrap stack's own roles
+        # (deploy/file-publishing/image-publishing/lookup/exec) rather than
+        # acting directly as the calling identity — without permission to
+        # assume them, CDK silently falls back to this role's own
+        # credentials, and this role never had ecr:* to push the Lambda's
+        # container image asset with. Granting AssumeRole on the bootstrap
+        # roles is what actually makes `cdk deploy` push image/file assets;
+        # the explicit ecr:* grant below is a defensive fallback in case
+        # that assume-role path isn't used for some reason.
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["sts:AssumeRole"],
+                resources=[
+                    f"arn:aws:iam::{self.account}:role/cdk-*-{self.account}-{self.region}"
+                ],
+            )
+        )
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["ecr:*"],
+                resources=["*"],
+            )
+        )
+        # CDK checks this parameter to confirm the target account/region is
+        # bootstrapped before it will deploy at all — without read access to
+        # it, `cdk deploy` fails immediately, before touching any of this
+        # stack's own resources.
+        github_deploy_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter"],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/cdk-bootstrap/*"
+                ],
+            )
+        )
 
         from aws_cdk import CfnOutput
 

@@ -78,7 +78,6 @@ export default function Privacy() {
           <Section title="4. Third-Party Services">
             <p>We use the following third-party services to operate DonorTrack:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong className="text-gray-800 dark:text-gray-200">Resend</strong> — transactional email delivery. Subject to <a href="https://resend.com/legal/privacy-policy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Resend's Privacy Policy</a>.</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Amazon Web Services (AWS)</strong> — application hosting and infrastructure. Subject to <a href="https://aws.amazon.com/privacy/" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">AWS's Privacy Notice</a>.</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Neon</strong> — database hosting. Subject to <a href="https://neon.tech/privacy-policy" className="text-emerald-600 hover:underline" target="_blank" rel="noopener noreferrer">Neon's Privacy Policy</a>.</li>
             </ul>

@@ -71,14 +71,13 @@ export default function Login() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
-                <Link to="/forgot-password" className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Password
+              </label>
+              {/* No "Forgot password?" link: there's no email provider
+                  configured, so a reset email could never actually be
+                  delivered. The /forgot-password route/page still exist,
+                  unlinked, in case email comes back later. */}
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}

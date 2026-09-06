@@ -123,6 +123,35 @@ def test_spa_routing_is_scoped_to_the_default_behavior_only():
     )
 
 
+def test_github_deploy_role_can_assume_cdk_bootstrap_roles():
+    # Regression guard: without sts:AssumeRole on the bootstrap roles,
+    # `cdk deploy` silently falls back to acting as this role directly
+    # instead of the bootstrap deploy/file-publishing/image-publishing
+    # roles it normally uses — and this role never had ecr:* for the
+    # Lambda's container image asset push to work under that fallback.
+    template = _synth_stack()
+    template.has_resource_properties(
+        "AWS::IAM::Policy",
+        {
+            "PolicyDocument": {
+                "Statement": Match.array_with(
+                    [Match.object_like({"Action": "sts:AssumeRole"})]
+                )
+            }
+        },
+    )
+    template.has_resource_properties(
+        "AWS::IAM::Policy",
+        {
+            "PolicyDocument": {
+                "Statement": Match.array_with(
+                    [Match.object_like({"Action": "ecr:*"})]
+                )
+            }
+        },
+    )
+
+
 def test_github_oidc_role_exists():
     template = _synth_stack()
     template.has_resource_properties(

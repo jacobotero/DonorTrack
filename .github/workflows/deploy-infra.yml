@@ -52,6 +52,18 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
 
+      # This repo has no prisma/migrations/ directory and has always used
+      # `db push` (see the plan's Global Constraints) -- so schema changes
+      # need this step, not `prisma migrate deploy`, which silently no-ops
+      # when there's no migration history. Reads the DB URL from SSM
+      # (already readable by this role) instead of a separate GitHub
+      # secret, so there's only one place the connection string lives.
+      - name: Apply database schema
+        working-directory: backend
+        run: |
+          export DATABASE_URL=$(aws ssm get-parameter --name "/donortrack/database-url" --with-decryption --query "Parameter.Value" --output text)
+          npx prisma db push --accept-data-loss
+
       - name: Deploy
         working-directory: infra
         run: cdk deploy --require-approval never
