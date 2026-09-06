@@ -103,12 +103,6 @@ export default function Landing() {
               >
                 Features
               </a>
-              <a
-                href="#free"
-                className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
-              >
-                Free to Use
-              </a>
               <Link
                 to="/help"
                 className="hidden md:block text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium"
